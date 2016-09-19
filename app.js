@@ -41,46 +41,48 @@ var ejecutar = process.argv[2];
 switch(ejecutar) {
     case '0':
         //Parametros para user_timeline
-	if(process.argv.length==6){
-		var screenName = process.argv[3];
-		var sinceId = process.argv[4];
-		var maxId = process.argv[5];
-	}
-	else	
-		{
-		console.log("Faltan parametros");
-		return; 
+		if(process.argv.length==6){
+			var screenName = process.argv[3];
+			var sinceId = process.argv[4];
+			var maxId = process.argv[5];
+		} else {
+			console.log("Faltan parametros");
+			return;
 		}
-	var params = {screen_name: screenName, since_id:sinceId, max_id: maxId};
-	//var params = {screen_name: screenName, since_id:sinceId};
-	var metodo = 'statuses/user_timeline';
-	llamaTimeLine(true);
-        break;
+		var params = {screen_name: screenName, since_id:sinceId, max_id: maxId};
+		//var params = {screen_name: screenName, since_id:sinceId};
+		var metodo = 'statuses/user_timeline';
+		llamaTimeLine(true);
+
+		break;
     case '1':
-	//Parametros para search/tweets
-	var params = {q: 'hola mundo'};
-	var metodo = 'search/tweets';
-	llamaSearchTweet(0);
-        break;
-    	case '2':
-	//Parametros para users/search
-	var params = {q: 'larocapuerca'};
-	var metodo = 'users/search';
-	llamaUserSearch(0);
-        break;
+		//Parametros para search/tweets
+		var params = {q: 'hola mundo'};
+		var metodo = 'search/tweets';
+		llamaSearchTweet(0);
+
+		break;
+	case '2':
+		//Parametros para users/search
+		var params = {q: 'larocapuerca'};
+		var metodo = 'users/search';
+		llamaUserSearch(0);
+
+		break;
     case '3':
-	//Parametros para users/search
-	var screenName = process.argv[3];
-	var params = {screen_name: screenName};
-	var metodo = 'users/show';
-	llamaUserSearch(0);
-        break;		
+		//Parametros para users/search
+		var screenName = process.argv[3];
+		var params = {screen_name: screenName};
+		var metodo = 'users/show';
+		llamaUserSearch(0);
+
+		break;
     default:
         console.log("Debe ingresar el nro de accion a ejecutar");
-	console.log("0 = statuses/user_timeline");
+		console.log("0 = statuses/user_timeline");
         console.log("1 = search/tweets");
         console.log("2 = users/search");
-	console.log("3 = users/show");
+		console.log("3 = users/show");
 }
 
 
