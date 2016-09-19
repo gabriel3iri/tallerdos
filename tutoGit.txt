@@ -1,0 +1,36 @@
+
+Primero que nada, forkear el repo a TU cuenta de github.
+Luego, a la consola:
+
+cd /project-path
+git init
+
+# Para OSX y Windows
+git remote add origin https://github.com/your-github-username/project-name.git
+git remote add ownerRepo https://github.com/owner-github-username/project-name.git
+# o sea:
+git remote add origin https://github.com/gituser/tallerdos.git
+git remote add ownerRepo https://github.com/gabriel3iri/tallerdos.git
+# ownerRepo lo podés reemplazar por otro nombre, simplemente hace referencia a que "eso" está conectado con el repositorio del propietario
+
+# Para Linux sería:
+git remote add origin ssh://git@github.com/your-github-username/project-name.git
+git remote add ownerRepo ssh://git@github.com/owner-github-username/project-name.git
+
+#para empezar a laburar:
+git pull ownerRepo develop
+
+# Locate in the develop branch
+git checkout develop
+
+# Get the last code from the remote repository
+git pull remote develop
+
+# If there's any uncommitted change, push it to your repository
+git push origin develop
+
+# Create a branch for the ticket
+git checkout -b nombre_del_branch
+# nombre_del_branch: Debería hacer referencia a la tarea que se realizó
+
+#Después mirate esto: http://www.codealist.co/git-workflow-introduction-and-useful-commands/
