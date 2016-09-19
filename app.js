@@ -29,7 +29,19 @@ var client = new Twitter({
   access_token_secret: 'Vs0iz7PowN8wm5OesQFPN32uraKAjCtyNh20yTzL4gneU'
 });
  
-var limite= 1;
+var limite = 1;
+/* MongoDB connection */
+var dbName = 'twitter';
+var tuitSchema = new mongoose.Schema({
+	twid       : String,
+	screen_name : String,
+	text       : String,
+	date       : Date
+});
+var Tuit = mongoose.model('Tuit', tuitSchema);
+mongoose.connect('mongodb://localhost/twitter');
+connectDb(dbName);
+
 var ejecutar = process.argv[2];
 
 
@@ -77,6 +89,10 @@ switch(ejecutar) {
 		llamaUserSearch(0);
 
 		break;
+	case '4':
+		connectDb(dbName);
+
+		break;
     default:
         console.log("Debe ingresar el nro de accion a ejecutar");
 		console.log("0 = statuses/user_timeline");
@@ -85,8 +101,14 @@ switch(ejecutar) {
 		console.log("3 = users/show");
 }
 
-function connectDb() {
-	mongoose.connect('mongodb://localhost/test');
+function connectDb(dbName) {
+	//	mongoose.connect('mongodb://127.0.0.1/twitter');
+	mongoose.createConnection('localhost', dbName);
+	var db = mongoose.connection;
+	db.on('error', console.error.bind(console, 'connection error:'));
+	db.once('open', function() {
+		console.log('We are now connected to ' + dbName + ' database.');
+	});
 }
 
 
@@ -119,14 +141,30 @@ function llamaTimeLine(llamar){
 				var date = new Date();
 				var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
 				if (!error) {
-					console.log("length", tweets.length);
-					console.log("tw", tweets);
+					//console.log("length", tweets.length);
+					//console.log("tw", tweets);
 					if(tweets.length){
 						for(t in tweets){
 							// console.log(parseInt(t)+1,tweets[t].id_str, tweets[t].created_at,tweets[t].text);
-							console.log(parseInt(t)+1,tweets[t].id_str, tweets[t].created_at);
+							console.log('Tuit encontrado:', parseInt(t)+1,tweets[t].id_str, tweets[t].created_at);
 							var maxId = decStrNum(tweets[t].id_str) ;
-							}
+							var tweet = {
+								twid: tweets[t].id_str,
+								screen_name: tweets[t].user.screen_name,
+								text: tweets[t].text,
+								date: tweets[t].created_at
+							};
+							//console.log(tweet);
+							//Acá meto el tuit en el schema que creé al principio
+							var newTuit = new Tuit(tweet);
+							//y lo guardo
+							newTuit.save(function(err) {
+								if (!err) {
+									// If everything is cool, socket.io emits the tweet.
+									console.log('Tuit ' + tweet.twid + ' saved successfully.');
+								}
+							});
+						}
 						params.max_id = maxId;
 						console.log('Ejecutado correctamente', time);
 					}else{
