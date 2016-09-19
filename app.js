@@ -85,6 +85,10 @@ switch(ejecutar) {
 		console.log("3 = users/show");
 }
 
+function connectDb() {
+	mongoose.connect('mongodb://localhost/test');
+}
+
 
 function llamaSearchTweet(x){
 		client.get(metodo, params, function(error, tweets, response){
