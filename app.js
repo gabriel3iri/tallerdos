@@ -39,8 +39,9 @@ var tuitSchema = new mongoose.Schema({
 	date       : Date
 });
 var Tuit = mongoose.model('Tuit', tuitSchema);
+//Conexión a la DB por medio de mongoose
 mongoose.connect('mongodb://localhost/twitter');
-connectDb(dbName);
+//connectDb(dbName);
 
 var ejecutar = process.argv[2];
 
@@ -111,9 +112,60 @@ function connectDb(dbName) {
 	});
 }
 
+/*
+ * Método statuses/user_timeline de la API
+ */
+function llamaTimeLine(llamar){
+	client.get(metodo, params, function(error, tweets, response){
+		console.log("Iniciando la recolección...");
+		var date = new Date();
+		var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
+		if (!error) {
+			//console.log("length", tweets.length);
+			//console.log("tw", tweets);
+			if(tweets.length){
+				//recorro los 20 tweets que da la API por página
+				for(t in tweets){
+					// console.log(parseInt(t)+1,tweets[t].id_str, tweets[t].created_at,tweets[t].text);
+					console.log('Tuit encontrado:', parseInt(t)+1,tweets[t].id_str, tweets[t].created_at);
+					var maxId = stringDec(tweets[t].id_str) ;
+					//Defino el objeto, que coincide con el schema de mogoose
+					var tweet = {
+						twid: tweets[t].id_str,
+						screen_name: tweets[t].user.screen_name,
+						text: tweets[t].text,
+						date: tweets[t].created_at
+					};
+					//console.log(tweet);
+					//Acá meto el tuit en el schema que creé al principio
+					var newTuit = new Tuit(tweet);
+					//y lo guardo
+					newTuit.save(function(err) {
+						if (!err) {
+							// If everything is cool, socket.io emits the tweet.
+							console.log('Tuit ' + tweet.twid + ' saved successfully.');
+						}
+					});
+				}
+				params.max_id = maxId;
+				console.log('Ejecutado correctamente', time);
+			}else{
+				llamar= false;
+			}
+		}else{
+			console.log('Error: ',error);
+			llamar = false;
+		}
+		if(llamar)
+			llamaTimeLine(true);
+	});
+}
 
+/*
+ * API Search de Twitter
+ */
 function llamaSearchTweet(x){
-		client.get(metodo, params, function(error, tweets, response){
+	client.get(metodo, params, function(error, tweets, response){
 		var date = new Date();
 		var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
 		  if (!error) {
@@ -125,84 +177,41 @@ function llamaSearchTweet(x){
 			console.log(x,'Excedido request ',time);
 			x=limite;
 			}
-			
+
 		x++;
 		if(x<limite)
-			llama(x);	
-		});
-
+			llama(x);
+	});
 }
 
-function llamaTimeLine(llamar){
-		console.log("params",params);
-		console.log("metodo",metodo);
-		client.get(metodo, params, function(error, tweets, response){
-				console.log("Iniciando la recolección...");
-				var date = new Date();
-				var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-				if (!error) {
-					//console.log("length", tweets.length);
-					//console.log("tw", tweets);
-					if(tweets.length){
-						for(t in tweets){
-							// console.log(parseInt(t)+1,tweets[t].id_str, tweets[t].created_at,tweets[t].text);
-							console.log('Tuit encontrado:', parseInt(t)+1,tweets[t].id_str, tweets[t].created_at);
-							var maxId = decStrNum(tweets[t].id_str) ;
-							var tweet = {
-								twid: tweets[t].id_str,
-								screen_name: tweets[t].user.screen_name,
-								text: tweets[t].text,
-								date: tweets[t].created_at
-							};
-							//console.log(tweet);
-							//Acá meto el tuit en el schema que creé al principio
-							var newTuit = new Tuit(tweet);
-							//y lo guardo
-							newTuit.save(function(err) {
-								if (!err) {
-									// If everything is cool, socket.io emits the tweet.
-									console.log('Tuit ' + tweet.twid + ' saved successfully.');
-								}
-							});
-						}
-						params.max_id = maxId;
-						console.log('Ejecutado correctamente', time);
-					}else{
-						llamar= false;
-					}
-				}else{
-					console.log('Error: ',error);
-					llamar = false;
-				}
-				if(llamar)
-					llamaTimeLine(true);	
-		});
-
-}
-
+/*
+ * API user/shows, muestra la data de un user
+ */
 function llamaUserSearch(x){
-		client.get(metodo, params, function(error, tweets, response){
+	client.get(metodo, params, function(error, tweets, response){
 		var date = new Date();
 		var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-		  if (!error) {
+		if (!error) {
 			console.log(tweets);
-			// for(t in tweets)
-			//	console.log(parseInt(t)+1,tweets[t].id,tweets[t].text);
+			//for(t in tweets)
+			//console.log(parseInt(t)+1,tweets[t].id,tweets[t].text);
 			console.log(x,'Ejecutado correctamente', time);
-		  }
-		  else{
+	 	}else{
 			console.log(x,'Excedido request ',time);
-			x=limite;
-			}
-			
+			x = limite;
+		}
 		x++;
 		if(x<limite)
 			llama(x);	
-		});
-
+	});
 }
 
-
+/*
+ * Los IDs de los tuits se deben manejar como [strings] en lugar de [int]
+ * porque los valores son más altos que el valor numérico que acepta JavaScript
+ *
+ * Incrementa en 1 un string numérico
+ */
 function stringInc(v){
     var digits = v.toString().split('');
     var i = digits.length-1;
@@ -214,7 +223,10 @@ function stringInc(v){
     return digits.join('');
 }
 
-function decStrNum (n) {
+/*
+ * Decrementa en 1 un string numérico
+ */
+function stringDec (n) {
     n = n.toString();
     var result=n;
     var i=n.length-1;
