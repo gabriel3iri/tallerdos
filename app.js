@@ -60,9 +60,10 @@ app.listen(port, function() {
     console.log("Node server running on http://localhost:" + port);
 });
 
-var limite = 1;
+// MongoDB connection a big data
+var bigData = 'mongodb://localhost/bigdata';
 // MongoDB connection a base de datos local
-var dbLocal = 'twitter';
+var smallData = 'twitter';
 var tuitSchema = new mongoose.Schema({
 	twid       : String,
 	screen_name : String,
@@ -71,17 +72,18 @@ var tuitSchema = new mongoose.Schema({
 });
 var Tuit = mongoose.model('Tuit', tuitSchema);
 // Conexión a la DB por medio de mongoose
-mongoose.connect('mongodb://localhost/' + dbLocal);
+mongoose.connect('mongodb://localhost/' + smallData);
 // Se vacía la base de datos temporal
-Tuit.remove({}, function (err, product) {
+exportToBigdata();
+
+return;
+Tuit.remove({}, function (err) {
     if(!err){
-        console.log('DB ' + dbLocal + ' cleaned succesfully')
+        console.log('DB ' + smallData + ' cleaned succesfully')
     }else{
         console.log(err);
     }
 });
-// MongoDB connection a big data
-var bigData = 'bigdata';
 
 router.get('/status', function(req, res) {
     res.send(nodeStatus);
@@ -232,7 +234,10 @@ function getNextCredential() {
     return 0;
 }
 
-// Limpiar collection
-function clearCollection() {
-
+// Exporta los documentos de la collection local a bigdata
+function exportToBigdata() {
+    var allTuits = new Array();
+    Tuit.find({}, '', function (err, tuit) {
+        allTuits.push(tuit);
+    });
 }
