@@ -1,3 +1,8 @@
+var express = require("express"),
+    app = express(),
+    bodyParser  = require("body-parser"),
+    methodOverride = require("method-override");
+
 var Twitter = require('twitter');
 var mongoose = require('mongoose');
 var credentials = new Array(
@@ -28,15 +33,30 @@ var credentials = new Array(
 			access_token_secret: 'Vs0iz7PowN8wm5OesQFPN32uraKAjCtyNh20yTzL4gneU'}
 		);
 var credentialNumber = 0;
+// Instancio el cliente de Twitter con la primer credencial
 var client = new Twitter(credentials[credentialNumber]);
 
-function getNextCredential() {
-	if(credentialNumber < credentials.length){
-		credentialNumber = credentialNumber+1;
-		return credentialNumber;
-	}
-	return 0;
+// Armo el server
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(methodOverride());
+
+var router = express.Router();
+router.get('/', function(req, res) {
+    res.send("Hello World!");
+});
+
+app.use(router);
+// Me pasan el puerto por parámetro
+if(process.argv.length==3){
+    var port = process.argv[2];
+} else {
+    console.log("Faltan parametros");
+    return;
 }
+app.listen(port, function() {
+    console.log("Node server running on http://localhost:" + port);
+});
 
 var limite = 1;
 /* MongoDB connection */
@@ -52,7 +72,6 @@ var Tuit = mongoose.model('Tuit', tuitSchema);
 mongoose.connect('mongodb://localhost/twitter');
 //connectDb(dbName);
 
-var ejecutar = process.argv[2];
 
 
 //Parametros para user_timeline
@@ -60,71 +79,28 @@ var ejecutar = process.argv[2];
 //var metodo = 'users/show';
 
 
-switch(ejecutar) {
-    case '0':
-        //Parametros para user_timeline
-		if(process.argv.length==6){
-			var screenName = process.argv[3];
-			var sinceId = process.argv[4];
-			var maxId = process.argv[5];
-		} else {
-			console.log("Faltan parametros");
-			return;
-		}
-		var params = {screen_name: screenName, since_id:sinceId, max_id: maxId};
-		//var params = {screen_name: screenName, since_id:sinceId};
-		var metodo = 'statuses/user_timeline';
-		llamaTimeLine(true);
-
-		break;
-    case '1':
-		//Parametros para search/tweets
-		var params = {q: 'hola mundo'};
-		var metodo = 'search/tweets';
-		llamaSearchTweet(0);
-
-		break;
-	case '2':
-		//Parametros para users/search
-		var params = {q: 'larocapuerca'};
-		var metodo = 'users/search';
-		llamaUserSearch(0);
-
-		break;
-    case '3':
-		//Parametros para users/search
-		var screenName = process.argv[3];
-		var params = {screen_name: screenName};
-		var metodo = 'users/show';
-		llamaUserSearch(0);
-
-		break;
-	case '4':
-		connectDb(dbName);
-
-		break;
-    default:
-        console.log("Debe ingresar el nro de accion a ejecutar");
-		console.log("0 = statuses/user_timeline");
-        console.log("1 = search/tweets");
-        console.log("2 = users/search");
-		console.log("3 = users/show");
-}
-
-function connectDb(dbName) {
-	//	mongoose.connect('mongodb://127.0.0.1/twitter');
-	mongoose.createConnection('localhost', dbName);
-	var db = mongoose.connection;
-	db.on('error', console.error.bind(console, 'connection error:'));
-	db.once('open', function() {
-		console.log('We are now connected to ' + dbName + ' database.');
-	});
-}
+router.get('/timeline', function(req, res) {
+    //console.log(req.query);
+    if(
+        (req.query.screen_name !== undefined) &&
+        (req.query.since_id !== undefined) &&
+        (req.query.max_id !== undefined)
+    ){
+        var params = {screen_name: req.query.screen_name,
+                        since_id:req.query.since_id,
+                        max_id: req.query.max_id};
+        var metodo = 'statuses/user_timeline';
+        llamaTimeLine(true, metodo, params);
+        res.send("Listo el pollo!");
+    }else{
+        res.send("Not enough params.");
+    }
+});
 
 /*
  * Método statuses/user_timeline de la API
  */
-function llamaTimeLine(llamar){
+function llamaTimeLine(llamar, metodo, params){
 	client.get(metodo, params, function(error, tweets, response){
 		//console.log("Iniciando la recolección...");
 		var date = new Date();
@@ -163,7 +139,7 @@ function llamaTimeLine(llamar){
 				//console.log('Ejecutado correctamente', time);
 			}else{
 				//cuando la request viene vacía
-				llamar= false;
+				llamar = false;
 			}
 		}else{
 			//Se agotaron las peticiones para el token actual, pruebo con otro token
@@ -174,7 +150,7 @@ function llamaTimeLine(llamar){
 			//llamar = false;
 		}
 		if(llamar)
-			llamaTimeLine(true);
+			llamaTimeLine(true, metodo, params);
 	});
 }
 
@@ -258,4 +234,13 @@ function stringDec (n) {
       }
     }
     return result;
+}
+
+// Paso a la siguiente credencial en el array de credenciales
+function getNextCredential() {
+    if(credentialNumber < credentials.length){
+        credentialNumber = credentialNumber+1;
+        return credentialNumber;
+    }
+    return 0;
 }
