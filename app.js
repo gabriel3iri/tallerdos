@@ -1,3 +1,8 @@
+var express = require("express"),
+    app = express(),
+    bodyParser  = require("body-parser"),
+    methodOverride = require("method-override");
+
 var Twitter = require('twitter');
 var mongoose = require('mongoose');
 var credentials = new Array(
@@ -28,19 +33,37 @@ var credentials = new Array(
 			access_token_secret: 'Vs0iz7PowN8wm5OesQFPN32uraKAjCtyNh20yTzL4gneU'}
 		);
 var credentialNumber = 0;
+// Instancio el cliente de Twitter con la primer credencial
 var client = new Twitter(credentials[credentialNumber]);
 
-function getNextCredential() {
-	if(credentialNumber < credentials.length){
-		credentialNumber = credentialNumber+1;
-		return credentialNumber;
-	}
-	return 0;
-}
+var nodeStatus = {status: 0, msg: "Nodo libre"};
 
-var limite = 1;
-/* MongoDB connection */
-var dbName = 'twitter';
+// Armo el server
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(methodOverride());
+
+var router = express.Router();
+router.get('/', function(req, res) {
+    res.send("Hello World!");
+});
+
+app.use(router);
+// Me pasan el puerto por parámetro
+if(process.argv.length==3){
+    var port = process.argv[2];
+} else {
+    console.log("Falta especificar el puerto");
+    return;
+}
+app.listen(port, function() {
+    console.log("Node server running on http://localhost:" + port);
+});
+
+// MongoDB connection a big data
+var bigData = 'mongodb://localhost/bigdata';
+// MongoDB connection a base de datos local
+var smallData = 'twitter';
 var tuitSchema = new mongoose.Schema({
 	twid       : String,
 	screen_name : String,
@@ -48,83 +71,48 @@ var tuitSchema = new mongoose.Schema({
 	date       : Date
 });
 var Tuit = mongoose.model('Tuit', tuitSchema);
-//Conexión a la DB por medio de mongoose
-mongoose.connect('mongodb://localhost/twitter');
-//connectDb(dbName);
+// Conexión a la DB por medio de mongoose
+mongoose.connect('mongodb://localhost/' + smallData);
+// Se vacía la base de datos temporal
+exportToBigdata();
 
-var ejecutar = process.argv[2];
+return;
+Tuit.remove({}, function (err) {
+    if(!err){
+        console.log('DB ' + smallData + ' cleaned succesfully')
+    }else{
+        console.log(err);
+    }
+});
 
+router.get('/status', function(req, res) {
+    res.send(nodeStatus);
+});
 
-//Parametros para user_timeline
-//var params = {screen_name: 'larocapuerca', since_id:568121154617024499};
-//var metodo = 'users/show';
-
-
-switch(ejecutar) {
-    case '0':
-        //Parametros para user_timeline
-		if(process.argv.length==6){
-			var screenName = process.argv[3];
-			var sinceId = process.argv[4];
-			var maxId = process.argv[5];
-		} else {
-			console.log("Faltan parametros");
-			return;
-		}
-		var params = {screen_name: screenName, since_id:sinceId, max_id: maxId};
-		//var params = {screen_name: screenName, since_id:sinceId};
-		var metodo = 'statuses/user_timeline';
-		llamaTimeLine(true);
-
-		break;
-    case '1':
-		//Parametros para search/tweets
-		var params = {q: 'hola mundo'};
-		var metodo = 'search/tweets';
-		llamaSearchTweet(0);
-
-		break;
-	case '2':
-		//Parametros para users/search
-		var params = {q: 'larocapuerca'};
-		var metodo = 'users/search';
-		llamaUserSearch(0);
-
-		break;
-    case '3':
-		//Parametros para users/search
-		var screenName = process.argv[3];
-		var params = {screen_name: screenName};
-		var metodo = 'users/show';
-		llamaUserSearch(0);
-
-		break;
-	case '4':
-		connectDb(dbName);
-
-		break;
-    default:
-        console.log("Debe ingresar el nro de accion a ejecutar");
-		console.log("0 = statuses/user_timeline");
-        console.log("1 = search/tweets");
-        console.log("2 = users/search");
-		console.log("3 = users/show");
-}
-
-function connectDb(dbName) {
-	//	mongoose.connect('mongodb://127.0.0.1/twitter');
-	mongoose.createConnection('localhost', dbName);
-	var db = mongoose.connection;
-	db.on('error', console.error.bind(console, 'connection error:'));
-	db.once('open', function() {
-		console.log('We are now connected to ' + dbName + ' database.');
-	});
-}
+router.get('/timeline', function(req, res) {
+    //console.log(req.query);
+    if(
+        (req.query.screen_name !== undefined) &&
+        (req.query.since_id !== undefined) &&
+        (req.query.max_id !== undefined)
+    ){
+        var params = {screen_name: req.query.screen_name,
+                        since_id:req.query.since_id,
+                        max_id: req.query.max_id};
+        var metodo = 'statuses/user_timeline';
+        llamaTimeLine(true, metodo, params);
+        res.send("Process running in background.");
+    }else{
+        res.send("Not enough params.");
+    }
+});
 
 /*
  * Método statuses/user_timeline de la API
  */
-function llamaTimeLine(llamar){
+function llamaTimeLine(llamar, metodo, params){
+    // Cambio el estado del nodo
+    nodeStatus.status = 1;
 	client.get(metodo, params, function(error, tweets, response){
 		//console.log("Iniciando la recolección...");
 		var date = new Date();
@@ -146,6 +134,7 @@ function llamaTimeLine(llamar){
 						date: tweets[t].created_at
 					};
 					if(t == 1) {
+                        nodeStatus.msg = 'Procesando tuit ' + tweet.twid;
 						console.log('Analizando: ' + tweet.twid + ' ...');
 					}
 					//Acá meto el tuit en el schema que creé al principio
@@ -163,18 +152,21 @@ function llamaTimeLine(llamar){
 				//console.log('Ejecutado correctamente', time);
 			}else{
 				//cuando la request viene vacía
-				llamar= false;
-			}
+				llamar = false;
+                nodeStatus.status = 2;
+                nodeStatus.msg = 'Finalizó el proceso de la query: ' + params.screen_name + ' [' + params.since_id+ ', ' + params.max_id + ']';
+            }
 		}else{
 			//Se agotaron las peticiones para el token actual, pruebo con otro token
 			console.log('Error: ',error);
 			var nextCredential = getNextCredential();
 			client = new Twitter(credentials[nextCredential]);
+            nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
 			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
 			//llamar = false;
 		}
 		if(llamar)
-			llamaTimeLine(true);
+			llamaTimeLine(true, metodo, params);
 	});
 }
 
@@ -185,41 +177,14 @@ function llamaSearchTweet(x){
 	client.get(metodo, params, function(error, tweets, response){
 		var date = new Date();
 		var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-		  if (!error) {
-			 for(t in tweets.statuses)
-				console.log(parseInt(t)+1,tweets.statuses[t].id, tweets.statuses[t].text);
-			console.log(x,'Ejecutado correctamente', time);
-		  }
-		  else{
+        if (!error) {
+            for(t in tweets.statuses) {
+                console.log(parseInt(t) + 1, tweets.statuses[t].id, tweets.statuses[t].text);
+            }
+            console.log(x,'Ejecutado correctamente', time);
+        }else{
 			console.log(x,'Excedido request ',time);
-			x=limite;
-			}
-
-		x++;
-		if(x<limite)
-			llama(x);
-	});
-}
-
-/*
- * API user/shows, muestra la data de un user
- */
-function llamaUserSearch(x){
-	client.get(metodo, params, function(error, tweets, response){
-		var date = new Date();
-		var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-		if (!error) {
-			console.log(tweets);
-			//for(t in tweets)
-			//console.log(parseInt(t)+1,tweets[t].id,tweets[t].text);
-			console.log(x,'Ejecutado correctamente', time);
-	 	}else{
-			console.log(x,'Excedido request ',time);
-			x = limite;
-		}
-		x++;
-		if(x<limite)
-			llama(x);	
+        }
 	});
 }
 
@@ -258,4 +223,21 @@ function stringDec (n) {
       }
     }
     return result;
+}
+
+// Paso a la siguiente credencial en el array de credenciales
+function getNextCredential() {
+    if(credentialNumber < credentials.length){
+        credentialNumber = credentialNumber+1;
+        return credentialNumber;
+    }
+    return 0;
+}
+
+// Exporta los documentos de la collection local a bigdata
+function exportToBigdata() {
+    var allTuits = new Array();
+    Tuit.find({}, '', function (err, tuit) {
+        allTuits.push(tuit);
+    });
 }
