@@ -61,8 +61,8 @@ app.listen(port, function() {
 });
 
 var limite = 1;
-/* MongoDB connection */
-var dbName = 'twitter';
+// MongoDB connection a base de datos local
+var dbLocal = 'twitter';
 var tuitSchema = new mongoose.Schema({
 	twid       : String,
 	screen_name : String,
@@ -70,8 +70,18 @@ var tuitSchema = new mongoose.Schema({
 	date       : Date
 });
 var Tuit = mongoose.model('Tuit', tuitSchema);
-//Conexión a la DB por medio de mongoose
-mongoose.connect('mongodb://localhost/twitter');
+// Conexión a la DB por medio de mongoose
+mongoose.connect('mongodb://localhost/' + dbLocal);
+// Se vacía la base de datos temporal
+Tuit.remove({}, function (err, product) {
+    if(!err){
+        console.log('DB ' + dbLocal + ' cleaned succesfully')
+    }else{
+        console.log(err);
+    }
+});
+// MongoDB connection a big data
+var bigData = 'bigdata';
 
 router.get('/status', function(req, res) {
     res.send(nodeStatus);
@@ -165,41 +175,14 @@ function llamaSearchTweet(x){
 	client.get(metodo, params, function(error, tweets, response){
 		var date = new Date();
 		var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-		  if (!error) {
-			 for(t in tweets.statuses)
-				console.log(parseInt(t)+1,tweets.statuses[t].id, tweets.statuses[t].text);
-			console.log(x,'Ejecutado correctamente', time);
-		  }
-		  else{
+        if (!error) {
+            for(t in tweets.statuses) {
+                console.log(parseInt(t) + 1, tweets.statuses[t].id, tweets.statuses[t].text);
+            }
+            console.log(x,'Ejecutado correctamente', time);
+        }else{
 			console.log(x,'Excedido request ',time);
-			x=limite;
-			}
-
-		x++;
-		if(x<limite)
-			llama(x);
-	});
-}
-
-/*
- * API user/shows, muestra la data de un user
- */
-function llamaUserSearch(x){
-	client.get(metodo, params, function(error, tweets, response){
-		var date = new Date();
-		var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
-		if (!error) {
-			console.log(tweets);
-			//for(t in tweets)
-			//console.log(parseInt(t)+1,tweets[t].id,tweets[t].text);
-			console.log(x,'Ejecutado correctamente', time);
-	 	}else{
-			console.log(x,'Excedido request ',time);
-			x = limite;
-		}
-		x++;
-		if(x<limite)
-			llama(x);	
+        }
 	});
 }
 
@@ -247,4 +230,9 @@ function getNextCredential() {
         return credentialNumber;
     }
     return 0;
+}
+
+// Limpiar collection
+function clearCollection() {
+
 }
