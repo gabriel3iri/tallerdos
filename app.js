@@ -36,6 +36,8 @@ var credentialNumber = 0;
 // Instancio el cliente de Twitter con la primer credencial
 var client = new Twitter(credentials[credentialNumber]);
 
+var nodeStatus = {status: 0, msg: "Nodo libre"};
+
 // Armo el server
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -51,7 +53,7 @@ app.use(router);
 if(process.argv.length==3){
     var port = process.argv[2];
 } else {
-    console.log("Faltan parametros");
+    console.log("Falta especificar el puerto");
     return;
 }
 app.listen(port, function() {
@@ -70,14 +72,10 @@ var tuitSchema = new mongoose.Schema({
 var Tuit = mongoose.model('Tuit', tuitSchema);
 //Conexión a la DB por medio de mongoose
 mongoose.connect('mongodb://localhost/twitter');
-//connectDb(dbName);
 
-
-
-//Parametros para user_timeline
-//var params = {screen_name: 'larocapuerca', since_id:568121154617024499};
-//var metodo = 'users/show';
-
+router.get('/status', function(req, res) {
+    res.send(nodeStatus);
+});
 
 router.get('/timeline', function(req, res) {
     //console.log(req.query);
@@ -91,7 +89,7 @@ router.get('/timeline', function(req, res) {
                         max_id: req.query.max_id};
         var metodo = 'statuses/user_timeline';
         llamaTimeLine(true, metodo, params);
-        res.send("Listo el pollo!");
+        res.send("Process running in background.");
     }else{
         res.send("Not enough params.");
     }
@@ -101,6 +99,8 @@ router.get('/timeline', function(req, res) {
  * Método statuses/user_timeline de la API
  */
 function llamaTimeLine(llamar, metodo, params){
+    // Cambio el estado del nodo
+    nodeStatus.status = 1;
 	client.get(metodo, params, function(error, tweets, response){
 		//console.log("Iniciando la recolección...");
 		var date = new Date();
@@ -122,6 +122,7 @@ function llamaTimeLine(llamar, metodo, params){
 						date: tweets[t].created_at
 					};
 					if(t == 1) {
+                        nodeStatus.msg = 'Procesando tuit ' + tweet.twid;
 						console.log('Analizando: ' + tweet.twid + ' ...');
 					}
 					//Acá meto el tuit en el schema que creé al principio
@@ -140,12 +141,15 @@ function llamaTimeLine(llamar, metodo, params){
 			}else{
 				//cuando la request viene vacía
 				llamar = false;
-			}
+                nodeStatus.status = 2;
+                nodeStatus.msg = 'Finalizó el proceso de la query: ' + params.screen_name + ' [' + params.since_id+ ', ' + params.max_id + ']';
+            }
 		}else{
 			//Se agotaron las peticiones para el token actual, pruebo con otro token
 			console.log('Error: ',error);
 			var nextCredential = getNextCredential();
 			client = new Twitter(credentials[nextCredential]);
+            nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
 			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
 			//llamar = false;
 		}
