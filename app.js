@@ -73,10 +73,11 @@ var tuitSchema = new mongoose.Schema({
 var Tuit = mongoose.model('Tuit', tuitSchema);
 // Conexión a la DB por medio de mongoose
 mongoose.connect('mongodb://localhost/' + smallData);
-// Se vacía la base de datos temporal
-exportToBigdata();
+//exportToBigdata();
 
-return;
+//Que es este return de abajo? Lo comente
+//return;
+// Se vacía la base de datos temporal
 Tuit.remove({}, function (err) {
     if(!err){
         console.log('DB ' + smallData + ' cleaned succesfully')
@@ -165,8 +166,12 @@ function llamaTimeLine(llamar, metodo, params){
 			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
 			//llamar = false;
 		}
-		if(llamar)
+		if(llamar){
 			llamaTimeLine(true, metodo, params);
+		}else{
+			//Terminó. Entonces tiene que empezar a pasar todo
+			exportToBigdata();
+		}
 	});
 }
 
