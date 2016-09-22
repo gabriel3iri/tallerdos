@@ -13,7 +13,10 @@ var express = require("express")
     ,methodOverride = require("method-override")
 	,Twitter = require('twitter')
 	,mongoose = require('mongoose')
-	,MathService = require('./service/mathService');
+	,MathService = require('./service/mathService')
+	,DBService = require('./service/DBService')
+	,TwitterService = require('./service/twitterService');
+
 	
 //Other variables
 var credentialNumber
@@ -129,17 +132,7 @@ function exportToBigdata() {
     });
 }
 
-function cleanData(){
-	// Se vacía la base de datos temporal
-	Tuit.remove({}, function (err) {
-		if(!err){
-			console.log('DB ' + smallData + ' cleaned succesfully')
-		}else{
-			console.log(err);
-		}
-	});
-}	
-	
+
 function createServer(){
 	// Armo el server
 	app.use(bodyParser.urlencoded({ extended: false }));
@@ -180,41 +173,14 @@ function createServer(){
 	});
 }
 
-function initializeVariables(){
-	credentials= new Array(
-		{
-			consumer_key: '0koJJXFOFhm830HVXYvjLWO2S',
-			consumer_secret: 'YIty1aj6uKYSRJTgUEkS6w36hKwuyvZdJPLhIq2Pnc7p3PEhI5',
-			access_token_key: '142500277-MNDZxM1moBIWCjvcvCpCfhqNy3Jj0mUYnjsWyFCi',
-			access_token_secret: 'nnieHsh1TzvAVxDC6Z8EQ4Xc4DiWtVBPaQn9CE8rhWLJG'},
-		{
-			consumer_key: 'uzxEhMcd78wlY6jG8f2A',
-			consumer_secret: 'L1M6cbjXQB69218oJbEi1E2SuD53sIsaGmuO0n2jXk',
-			access_token_key: '762504943-2julQvMq2z22JHWBGGi4EZlOeVnbldq5O1ABlK3e',
-			access_token_secret: 'AFsqwg0a3g9ZXY3vZL5NmhPdLuAdoQt6wWjuk5bAg'},
-		{
-			consumer_key: 'Lt1THtQDHVUZNmVu1MSnjQ',
-			consumer_secret: '1D2HIJr9mJ45hPC4ZPLI2s3vRv2I3b3Vsh6yDBjhk0',
-			access_token_key: '762504943-CFZ5RECfW6CvqWQlMEKAM6gYd8MOlgs7qQp9zCkl',
-			access_token_secret: 'galU64ISQepz0kZKeOfT9MzFIkVuRxWvwtZLWqdCij4'},
-		{
-			consumer_key: '3NRvOVtfk8jcqwSdflKc2yLiP',
-			consumer_secret: 'AlmHcJ5LQi9Ye9zuwHRbvAPNt344hT3w5vuLbL68xVd7FkMnXq',
-			access_token_key: '762504943-swMOhfEz0oDFRG9TISMaEhWKoTwlYsSwZYo8quRF',
-			access_token_secret: '7lCqO3bUIG5SkP3qhuPVbNimy1P2lOrPtuqgzDDiqYRob'},
-		{
-			consumer_key: 'qIh0mbXGhkWWyXW6nvymd2AQW',
-			consumer_secret: '6Oe9Kz0eFLnbs1snSEZEyTT1M0vArk8lnFIq7JE6LSxs7kbQzP',
-			access_token_key: '762504943-8TOy7ogygWjIC5VpNonjWyEvuD6Apvdf8Y2S5Gmu',
-			access_token_secret: 'Vs0iz7PowN8wm5OesQFPN32uraKAjCtyNh20yTzL4gneU'}
-		);
-	
+function initializeTwitter (){
 	credentialNumber = 0;
+	credentials = TwitterService.getCredentials();
 	// Instancio el cliente de Twitter con la primer credencial
 	client = new Twitter(credentials[credentialNumber]);
+}
 
-	nodeStatus = {status: 0, msg: "Nodo libre"};
-
+function initializeDB(){
 	// MongoDB connection a big data
 	bigData = 'mongodb://localhost/bigdata';
 	// MongoDB connection a base de datos local
@@ -227,9 +193,16 @@ function initializeVariables(){
 	});
 	Tuit = mongoose.model('Tuit', tuitSchema);
 	// Conexión a la DB por medio de mongoose
-	mongoose.connect('mongodb://localhost/' + smallData);
+	DBService.connectTo(smallData);
 	
-	cleanData();
+	DBService.cleanData(Tuit,smallData);
+	
+}
+function initializeVariables(){
+	initializeTwitter();
+	initializeDB();
+	nodeStatus = {status: 0, msg: "Nodo libre"};
+	
 }	
 //**********FIN Definicion de Funciones****************************
 
