@@ -144,12 +144,6 @@ function createServer(){
 		res.send("Hello World!");
 	});
 
-	app.use(router);
-
-	app.listen(port, function() {
-		console.log("Node server running on http://localhost:" + port);
-	});	
-		
 	router.get('/status', function(req, res) {
 		res.send(nodeStatus);
 	});
@@ -171,6 +165,12 @@ function createServer(){
 			res.send("Not enough params.");
 		}
 	});
+	
+	app.use(router);
+
+	app.listen(port, function() {
+		console.log("Node server running on http://localhost:" + port);
+	});	
 }
 
 function initializeTwitter (){
