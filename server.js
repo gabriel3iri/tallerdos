@@ -14,7 +14,7 @@ var express = require("express")
 	,twitterController = require('./controllers/twitterController');
 	
 //Other variables
-var nodeStatus;
+var nodeStatus = {status: 0, msg: "Nodo libre"};
 	
 //**********Definicion de Funciones****************************
 
@@ -57,17 +57,10 @@ function createServer(){
 	});	
 }
 
-
-function initializeVariables(){
-
-	nodeStatus = {status: 0, msg: "Nodo libre"};
-	
-}	
 //**********FIN Definicion de Funciones****************************
 
 
 //*********Work Flow************
-initializeVariables();
 createServer();
 
 //*********FIN Work Flow************
