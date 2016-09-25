@@ -3,6 +3,9 @@ var  mongoose = require('mongoose');
 exports.connectTo = function(db){
 	mongoose.connect('mongodb://localhost/' + db);
 }	
+exports.closeConnection = function(db){
+	mongoose.connection.close()
+}	
 
 exports.cleanData = function(objeto,dbName){
 	// Se vacía la base de datos temporal

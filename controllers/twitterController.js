@@ -3,6 +3,9 @@ var MathService = require('../service/mathService')
 	,DBService = require('../service/DBService')
 	,mongoose = require('mongoose')
 	,Twitter = require('twitter');
+	var Promise = require('bluebird');
+	
+	Promise.promisifyAll(mongoose);
 
 var credentialNumber
 	,credentials
@@ -11,9 +14,14 @@ var credentialNumber
 	,smallData
 	,tuitSchema
 	,Tuit
-	,tweet;
-
+	,TuitBig
+	,twee
+	,connSmall
+	,connBig;
+	
 exports.llamaTimeLine = function (params,nodeStatus){
+	//Vacio la base temporal en cada vuelta
+	DBService.cleanData(Tuit,smallData);
 	_llamaTimeLine(params,nodeStatus);
 }
 	
@@ -81,7 +89,6 @@ function _llamaTimeLine  (params,nodeStatus){
 			client = new Twitter(credentials[nextCredential]);
             nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
 			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
-			//llamar = false;
 		}
 		if(seguir){
 			_llamaTimeLine(params,nodeStatus);
@@ -112,22 +119,23 @@ function _llamaSearchTweet(x){
 
 
 function initializeDB(){
+	
 	// MongoDB connection a big data
-	bigData = 'mongodb://localhost/bigdata';
+	bigData = 'bigdata';
 	// MongoDB connection a base de datos local
 	smallData = 'twitter';
+	connBig      = mongoose.createConnection('mongodb://localhost/'+bigData);
+	connSmall     = mongoose.createConnection('mongodb://localhost/'+smallData);	
 	tuitSchema = new mongoose.Schema({
 		twid       : String,
 		screen_name : String,
 		text       : String,
 		date       : Date
 	});
-	Tuit = mongoose.model('Tuit', tuitSchema);
-	// Conexión a la DB por medio de mongoose
-	DBService.connectTo(smallData);
+	Tuit = connSmall.model('Tuit', tuitSchema);
+	TuitBig = connBig.model('Tuit', tuitSchema);
 
-	DBService.cleanData(Tuit,smallData);
-	
+	// Conexión a la DB por medio de mongoose
 }
 
 
@@ -149,13 +157,56 @@ function getNextCredential() {
 
 // Exporta los documentos de la collection local a bigdata
 function exportToBigdata() {
+
 	console.log("exportando a bigData");
     var allTuits = new Array();
-    Tuit.find({}, '', function (err, tuit) {
-        allTuits.push(tuit);
-    });
+    Tuit.findAsync({}, '')
+		.then(function(data){
+				for(index in data){
+					allTuits.push(data[index]);
+				}
+				if(allTuits.length>0){
+					_exportToBigdata(allTuits);
+				}else{
+					console.log("La busqueda no arrojo resultados");
+				}	
+		})
+		.catch(function(err) {
+			console.log("There was an error");
+		});	
 }
-
+function _exportToBigdata(allTuits) {
+	var tuitExport;
+	var firstTuit ;
+	for (firstTuit in allTuits) break;
+	tuitExport = new TuitBig(allTuits[firstTuit]);
+	//Busco que no exista ya en la DB
+	TuitBig.findAsync({twid:allTuits[firstTuit].twid}, '')
+		.then(function(data){
+			if(data.length==0){
+				console.log("inserta el tuit: ",allTuits[firstTuit].twid);
+				tuitExport.save(function(err) {
+					if (!err) {
+						//console.log('Tuit ' + tweets[t].id_str + ' saved successfully.');
+					}
+				});
+			}else{
+				console.log("ya existe el tuit: ",allTuits[firstTuit].twid);
+			}
+		})
+		.catch(function(err) {
+			console.log("There was an error");
+		})		
+		.finally(function(){
+			//INTENTO BORRAR EL QUE YA ANALIZO. CONTROLAR BIEN ESTO
+			delete allTuits[firstTuit];
+			if(allTuits.length>(parseInt(firstTuit)+1)){
+				_exportToBigdata(allTuits);
+			}
+		});
+		
+	
+}
 
 initializeTwitter();
 initializeDB();
