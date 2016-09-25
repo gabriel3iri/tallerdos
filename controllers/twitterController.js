@@ -13,15 +13,15 @@ var credentialNumber
 	,bigData
 	,smallData
 	,tuitSchema
-	,Tuit
-	,TuitBig
+	,tuitDBSmall
+	,tuitDBBig
 	,twee
 	,connSmall
 	,connBig;
 	
 exports.llamaTimeLine = function (params,nodeStatus){
 	//Vacio la base temporal en cada vuelta
-	DBService.cleanData(Tuit,smallData);
+	DBService.cleanData(tuitDBSmall,smallData);
 	_llamaTimeLine(params,nodeStatus);
 }
 	
@@ -64,7 +64,7 @@ function _llamaTimeLine  (params,nodeStatus){
 						console.log('Analizando: ' + tweet.twid + ' ...');
 					}
 					//Acá meto el tuit en el schema que creé al principio
-					newTuit = new Tuit(tweet);
+					newTuit = new tuitDBSmall(tweet);
 					//y lo guardo
 					newTuit.save(function(err) {
 						if (!err) {
@@ -132,10 +132,9 @@ function initializeDB(){
 		text       : String,
 		date       : Date
 	});
-	Tuit = connSmall.model('Tuit', tuitSchema);
-	TuitBig = connBig.model('Tuit', tuitSchema);
+	tuitDBSmall = connSmall.model('Tuit', tuitSchema);
+	tuitDBBig = connBig.model('Tuit', tuitSchema);
 
-	// Conexión a la DB por medio de mongoose
 }
 
 
@@ -157,10 +156,9 @@ function getNextCredential() {
 
 // Exporta los documentos de la collection local a bigdata
 function exportToBigdata() {
-
 	console.log("exportando a bigData");
     var allTuits = new Array();
-    Tuit.findAsync({}, '')
+    tuitDBSmall.findAsync({}, '')
 		.then(function(data){
 				for(index in data){
 					allTuits.push(data[index]);
@@ -179,9 +177,9 @@ function _exportToBigdata(allTuits) {
 	var tuitExport;
 	var firstTuit ;
 	for (firstTuit in allTuits) break;
-	tuitExport = new TuitBig(allTuits[firstTuit]);
+	tuitExport = new tuitDBBig(allTuits[firstTuit]);
 	//Busco que no exista ya en la DB
-	TuitBig.findAsync({twid:allTuits[firstTuit].twid}, '')
+	tuitDBBig.findAsync({twid:allTuits[firstTuit].twid}, '')
 		.then(function(data){
 			if(data.length==0){
 				console.log("inserta el tuit: ",allTuits[firstTuit].twid);
@@ -204,8 +202,6 @@ function _exportToBigdata(allTuits) {
 				_exportToBigdata(allTuits);
 			}
 		});
-		
-	
 }
 
 initializeTwitter();
