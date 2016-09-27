@@ -8,7 +8,7 @@ exports.closeConnection = function(db){
 }	
 
 exports.cleanData = function(objeto,dbName){
-	// Se vacía la base de datos temporal
+	// Se vacÃ­aa la base de datos temporal
 	objeto.remove({}, function (err) {
 		if(!err){
 			console.log('DB ' + dbName + ' cleaned succesfully')

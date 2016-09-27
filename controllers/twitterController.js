@@ -24,12 +24,17 @@ exports.llamaTimeLine = function (params,nodeStatus){
 	DBService.cleanData(tuitDBSmall,smallData);
 	_llamaTimeLine(params,nodeStatus);
 }
-	
-	
+
+exports.llamaSearchTweet = function (params,nodeStatus){
+	//Vacio la base temporal en cada vuelta
+	DBService.cleanData(tuitDBSmall,smallData);
+	_llamaSearchTweet(params,nodeStatus);
+}
+
 /*
- * MÈtodo statuses/user_timeline de la API
+ * M√©todo statuses/user_timeline de la API
  */
-function _llamaTimeLine  (params,nodeStatus){
+function _llamaTimeLine (params,nodeStatus){
     var metodoApi = 'statuses/user_timeline';
 	var newTuit
 		,nextCredential
@@ -42,14 +47,14 @@ function _llamaTimeLine  (params,nodeStatus){
     nodeStatus.status = 1;
 	seguir =true;
 	client.get(metodoApi, params, function(error, tweets, response){
-		//console.log("Iniciando la recolecciÛn...");
+		//console.log("Iniciando la recolecci√≥n...");
 		date = new Date();
 		time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
 		if (!error) {
 			//console.log("length", tweets.length);
 			//console.log("tw", tweets);
 			if(tweets.length){
-				//recorro los 20 tweets que da la API por p·gina
+				//recorro los 20 tweets que da la API por p√°gina
 				for(t in tweets){
 					maxId = MathService.stringDec(tweets[t].id_str) ;
 					//Defino el objeto, que coincide con el schema de mogoose
@@ -63,7 +68,7 @@ function _llamaTimeLine  (params,nodeStatus){
                         nodeStatus.msg = 'Procesando tuit ' + tweet.twid;
 						console.log('Analizando: ' + tweet.twid + ' ...');
 					}
-					//Ac· meto el tuit en el schema que creÈ al principio
+					//Ac√° meto el tuit en el schema que cre√≥ al principio
 					newTuit = new tuitDBSmall(tweet);
 					//y lo guardo
 					newTuit.save(function(err) {
@@ -77,10 +82,10 @@ function _llamaTimeLine  (params,nodeStatus){
 				params.max_id = maxId;
 				//console.log('Ejecutado correctamente', time);
 			}else{
-				//cuando la request viene vacÌa
+				//cuando la request viene vac√≠a
 				seguir = false;
                 nodeStatus.status = 2;
-                nodeStatus.msg = 'FinalizÛ el proceso de la query: ' + params.screen_name + ' [' + params.since_id+ ', ' + params.max_id + ']';
+                nodeStatus.msg = 'Finaliz√≥ el proceso de la query: ' + params.screen_name + ' [' + params.since_id+ ', ' + params.max_id + ']';
             }
 		}else{
 			//Se agotaron las peticiones para el token actual, pruebo con otro token
@@ -93,7 +98,7 @@ function _llamaTimeLine  (params,nodeStatus){
 		if(seguir){
 			_llamaTimeLine(params,nodeStatus);
 		}else{
-			//TerminÛ. Entonces tiene que empezar a pasar todo
+			//Termin√≥. Entonces tiene que empezar a pasar todo
 			exportToBigdata();
 		}
 	});
@@ -102,18 +107,67 @@ function _llamaTimeLine  (params,nodeStatus){
 /*
  * API Search de Twitter
  */
-function _llamaSearchTweet(x){
-	client.get(metodo, params, function(error, tweets, response){
-		var date = new Date();
-		var time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
+function _llamaSearchTweet(params,nodeStatus){
+	var metodoApi = 'search/tweets';
+	var newTuit
+		,nextCredential
+		,seguir
+		,maxId;
+
+	// Cambio el estado del nodo
+	nodeStatus.status = 1;
+	seguir =true;
+	client.get(metodoApi, params, function(error, tweets, response){
         if (!error) {
-            for(t in tweets.statuses) {
-                console.log(parseInt(t) + 1, tweets.statuses[t].id, tweets.statuses[t].text);
-            }
-            console.log(x,'Ejecutado correctamente', time);
+            //console.log(tweets);
+            console.log('Procesando ' + tweets.statuses.length + ' tweets');
+			if(tweets.statuses.length){
+				for(t in tweets.statuses) {
+				    maxId = MathService.stringDec(tweets.statuses[t].id_str) ;
+                    console.log(parseInt(t) + 1, tweets.statuses[t].id_str);//Defino el objeto, que coincide con el schema de mogoose
+                    tweet = {
+                        twid: tweets.statuses[t].id_str,
+                        screen_name: tweets.statuses[t].user.screen_name,
+                        text: tweets.statuses[t].text,
+                        date: tweets.statuses[t].created_at
+                    };
+                    if(t == 1) {
+                        nodeStatus.msg = 'Procesando tuit ' + tweet.twid;
+                        console.log('Analizando: ' + tweet.twid + ' ...');
+                    }
+                    //Ac√° meto el tuit en el schema que cre√≥ al principio
+                    newTuit = new tuitDBSmall(tweet);
+                    //y lo guardo
+                    newTuit.save(function(err) {
+                        if (!err) {
+                            // If everything is cool, socket.io emits the tweet.
+                            //console.log('Tuit ' + tweets.statuses[t].id_str + ' saved successfully.');
+                        }
+                    });
+				}
+
+                params.max_id = maxId;
+			}else{
+				//cuando la request viene vac√≠a
+				console.log('Finaliz√≥ el proceso',params.q);
+				seguir = false;
+				nodeStatus.status = 2;
+				nodeStatus.msg = 'Finaliz√≥ el proceso de la query: ' + params.q;
+			}
         }else{
-			console.log(x,'Excedido request ',time);
+			//Se agotaron las peticiones para el token actual, pruebo con otro token
+			console.log('Error: ',error);
+			nextCredential = getNextCredential();
+			client = new Twitter(credentials[nextCredential]);
+			nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
+			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
         }
+		if(seguir){
+			_llamaSearchTweet(params,nodeStatus);
+		}else{
+			//Termin√≥. Entonces tiene que empezar a pasar todo
+			exportToBigdata();
+		}
 	});
 }
 
@@ -166,7 +220,7 @@ function exportToBigdata() {
 				if(allTuits.length>0){
 					_exportToBigdata(allTuits);
 				}else{
-					console.log("La busqueda no arrojo resultados");
+					console.log("La busqueda no arroj√≥ resultados");
 				}	
 		})
 		.catch(function(err) {

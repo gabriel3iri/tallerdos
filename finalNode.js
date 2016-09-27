@@ -26,7 +26,7 @@ function createServer(){
 
 	var router = express.Router();
 	router.get('/', function(req, res) {
-		res.send("Hello World!");
+		res.send("Node working");
 	});
 
 	router.get('/status', function(req, res) {
@@ -43,13 +43,24 @@ function createServer(){
 			var params = {screen_name: req.query.screen_name,
 							since_id:req.query.since_id,
 							max_id: req.query.max_id};
-			twitterController.llamaTimeLine(params,nodeStatus, function(){});
-			res.send("Process running in background.");
+			twitterController.llamaTimeLine(params, nodeStatus, function(){});
+			res.send("El proceso está corriendo en background.");
 		}else{
-			res.send("Not enough params.");
+			res.send("Faltan parámetros. Debes especificar: screen_name, since_id, max_id");
 		}
 	});
-	
+
+	router.get('/search', function(req, res) {
+		console.log(req.query);
+		if(req.query.q !== undefined){
+			var params = {q: req.query.q}
+			twitterController.llamaSearchTweet(params, nodeStatus);
+		}else{
+			res.send("Faltan parámetros. Debes especificar: q");
+		}
+	});
+
+
 	app.use(router);
 
 	app.listen(port, function() {
