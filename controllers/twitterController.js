@@ -91,6 +91,7 @@ function _llamaTimeLine (params,nodeStatus){
 			//Se agotaron las peticiones para el token actual, pruebo con otro token
 			console.log('Error: ',error);
 			nextCredential = getNextCredential();
+            credentialNumber = nextCredential;
 			client = new Twitter(credentials[nextCredential]);
             nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
 			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
@@ -158,6 +159,7 @@ function _llamaSearchTweet(params,nodeStatus){
 			//Se agotaron las peticiones para el token actual, pruebo con otro token
 			console.log('Error: ',error);
 			nextCredential = getNextCredential();
+            credentialNumber = nextCredential;
 			client = new Twitter(credentials[nextCredential]);
 			nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
 			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
