@@ -32,7 +32,13 @@ var express = require("express")
 	router.get('/timeline', function(req, res) {
 		//console.log(req.query);
 		if(req.query.screen_name !== undefined){
-			balancerController.llamaTimeLine(req.query.screen_name);
+			//harcodeo los nodos disponibles
+			var availableNodes = 4;
+			// hago el .then del promise del llamaTimeline
+			balancerController.llamaTimeLine(req.query.screen_name, availableNodes)
+				.then(function (result) {
+					console.log('interval ',result);
+				});
 			res.send("Process running in background.");
 		}else{
 			res.send("Not enough params.");

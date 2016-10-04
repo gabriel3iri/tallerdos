@@ -57,6 +57,13 @@ function _checkNodes(items, process) {
     }, 25);
 }
 
-exports.llamaTimeLine = function(screenName) {
-    return TimelineService.getIntervalsArray(screenName);
+exports.llamaTimeLine = function(screenName, nodes) {
+    var interval;
+    //transformé el llamado en promise
+    return new Promise(function(resolve, reject) {
+        TimelineService.getIntervalsArray(screenName, nodes).then(function (data) {
+            interval = data;
+            resolve(interval);
+        });
+    });
 }

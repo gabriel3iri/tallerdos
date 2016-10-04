@@ -55,8 +55,6 @@ exports.getCredentials = function(){
 exports.userShow = function (screenName) {
 	var metodoApi = 'users/show';
 	var params = {"screen_name": screenName};
-	console.log('la encuentra?');
-
 	return new Promise(function(resolve, reject){
 		client.get(metodoApi, params, function(error, user, response) {
 			if (!error) {
@@ -66,19 +64,6 @@ exports.userShow = function (screenName) {
 					"created_at": user.status.created_at
 				};
 				resolve(result);
-			}
-		});
-	});
-}
-
-
-exports.test = function(){
-	return new Promise(function(resolve, reject){
-		tradiationCallbackBasedThing(function(error, data){
-			if (err) {
-				reject(err);
-			} else {
-				resolve(data)
 			}
 		});
 	});
