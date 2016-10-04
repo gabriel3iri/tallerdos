@@ -1,6 +1,7 @@
 var MathService = require('../service/mathService')
 	,TwitterService = require('../service/twitterService')
 	,DBService = require('../service/DBService')
+    ,TimelineService = require('../service/timelineService')
 	,mongoose = require('mongoose')
 	,Twitter = require('twitter');
 	var Promise = require('bluebird');
@@ -54,4 +55,8 @@ function _checkNodes(items, process) {
             setTimeout(arguments.callee, 25);
         }
     }, 25);
+}
+
+exports.llamaTimeLine = function(screenName) {
+    return TimelineService.getIntervalsArray(screenName);
 }
