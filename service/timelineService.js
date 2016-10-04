@@ -42,6 +42,8 @@ exports.getIntervalsArray = function (screenName, nodes) {
                         //se hace la división de días para cada nodo
                         daysPerNode = Math.floor(daysDiff / nodes);
                         //TODO: ir con este intervalo a la tabla de dates para conseguir los str_id
+                        //TODO: Si no tenemos todas las fechas, se puede usar getBestDate(nodeDate, dateCollection)
+                        //TODO: al final de este archivo, para traer la fecha más cercana que tengamos
                         //interval = getIntervalArray(sinceDate, toDate, maxId, nodes, daysPerNode);
                         //ojo que esto está harcodeado :O
                         interval = [
