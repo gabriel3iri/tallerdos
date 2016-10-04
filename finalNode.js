@@ -62,7 +62,7 @@ function createServer(){
 		} else {
 			console.log(req.query);
 			if(req.query.q !== undefined){
-				var params = {q: req.query.q}
+				var params = {q: req.query.q, count:100}
 				twitterController.llamaSearchTweet(params, nodeStatus);
 			}else{
 				res.send("Faltan parámetros. Debes especificar: q");

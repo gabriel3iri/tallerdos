@@ -2,7 +2,8 @@ var  mongoose = require('mongoose');
 
 exports.connectTo = function(db){
 	mongoose.connect('mongodb://localhost/' + db);
-}	
+}
+
 exports.closeConnection = function(db){
 	mongoose.connection.close()
 }	
