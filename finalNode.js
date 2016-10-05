@@ -46,8 +46,10 @@ function createServer(){
 				var params = {
 					screen_name: req.query.screen_name,
 					since_id: req.query.since_id,
-					max_id: req.query.max_id
+					max_id: req.query.max_id,
+					count: 200
 				};
+				console.log("params",params);
 				twitterController.llamaTimeLine(params, nodeStatus, function () {});
 				res.send("El proceso está corriendo en background.");
 			} else {
@@ -62,7 +64,12 @@ function createServer(){
 		} else {
 			console.log(req.query);
 			if(req.query.q !== undefined){
-				var params = {q: req.query.q, count:100}
+					var since_id=  req.query.since_id!==undefined?req.query.since_id:null;
+					var max_id= req.query.max_id!==undefined?req.query.since_id:null;
+				var params = {q: req.query.q, count:100,
+								since_id: req.query.since_id,
+								max_id: req.query.max_id
+				};
 				twitterController.llamaSearchTweet(params, nodeStatus);
 			}else{
 				res.send("Faltan parámetros. Debes especificar: q");
