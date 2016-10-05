@@ -11,15 +11,16 @@ var credential =
 				};
 var client = new Twitter(credential);
 
-var params = {
-	q: 'hello',
-	//since: '2016-01-19',
-	until: '2016-07-21',
-	count: 2
-};
+var params = { 
+  q: 'hola mundo'
+  ,since_id: '10'
+  ,max_id: '282908868976345089' 
+  ,count: 100
+  }
 
 client.get('search/tweets', params,
 	  function(err,tweets, response){
+		  console.log('tweets',tweets);
 		 if(!err){
 			 if(tweets.statuses.length){
 				for(t in tweets.statuses) {
@@ -33,7 +34,34 @@ client.get('search/tweets', params,
  		//	 console.log('response',response);
 		 } 
 	  });
+	 
+
+
+
+var params = { screen_name: 'larocapuerca',
+  since_id: '10'
+  ,max_id: '282908868976345089'
+  ,count: 200  }
 	  
+client.get('statuses/user_timeline', params,
+	  function(err,tweets, response){
+		 if(!err){
+			 if(tweets.length){
+				for(t in tweets) {
+					console.log(t);
+				}
+			 }else{
+				 console.log('no se encontro nada');
+			 }
+		 }else{
+			 console.log('err',err);
+ 		//	 console.log('response',response);
+		 } 
+	  });	  
+	  
+	  
+	  
+/*	  
 var Twit = require('twit');	  
 var T = new Twit(credential);
 var stream = T.stream('statuses/filter', { track: ['infobae'] })
@@ -41,3 +69,4 @@ var stream = T.stream('statuses/filter', { track: ['infobae'] })
 stream.on('tweet', function (tweet) {
   console.log(tweet.text);
 })	  
+*/
