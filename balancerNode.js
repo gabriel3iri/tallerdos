@@ -12,8 +12,8 @@ var express = require("express")
     ,bodyParser  = require("body-parser")
     ,methodOverride = require("method-override")
 	,balancerController = require('./controllers/balancerController');
-	
-	
+
+
 //**********Definicion de Funciones****************************
 
 (function(){
@@ -32,10 +32,8 @@ var express = require("express")
 	router.get('/timeline', function(req, res) {
 		//console.log(req.query);
 		if(req.query.screen_name !== undefined){
-			//harcodeo los nodos disponibles
-			var availableNodes = 4;
 			// hago el .then del promise del llamaTimeline
-			balancerController.llamaTimeLine(req.query.screen_name, availableNodes)
+			balancerController.llamaTimeLine(req.query.screen_name)
 				.then(function (result) {
 					console.log('interval ',result);
 				});
@@ -44,13 +42,12 @@ var express = require("express")
 			res.send("Not enough params.");
 		}
 	});
-	
+
 	app.use(router);
 
 	app.listen(port, function() {
 		console.log("Node server running on http://localhost:" + port);
-	});	
-	
-	balancerController.checkNodes();
-})();
+	});
 
+	//balancerController.checkNodes();
+})();

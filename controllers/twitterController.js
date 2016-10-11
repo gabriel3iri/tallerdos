@@ -4,7 +4,7 @@ var MathService = require('../service/mathService')
 	,mongoose = require('mongoose')
 	,Twitter = require('twitter');
 	var Promise = require('bluebird');
-	
+
 	Promise.promisifyAll(mongoose);
 
 var credentialNumber
@@ -18,7 +18,7 @@ var credentialNumber
 	,twee
 	,connSmall
 	,connBig;
-	
+
 exports.llamaTimeLine = function (params,nodeStatus){
 	//Vacio la base temporal en cada vuelta
 	DBService.cleanData(tuitDBSmall,smallData);
@@ -42,7 +42,7 @@ function _llamaTimeLine (params,nodeStatus){
 		,time
 		,seguir
 		,maxId;
-		
+
 	// Cambio el estado del nodo
     nodeStatus.status = 1;
 	seguir =true;
@@ -56,7 +56,8 @@ function _llamaTimeLine (params,nodeStatus){
 			if(tweets.length){
 				//recorro los 20 tweets que da la API por página
 				for(t in tweets){
-					maxId = MathService.stringDec(tweets[t].id_str) ;
+					//maxId = MathService.stringDec(tweets[t].id_str) ;
+					maxId =tweets[t].id_str;
 					//Defino el objeto, que coincide con el schema de mogoose
 					tweet = {
 						twid: tweets[t].id_str,
@@ -84,8 +85,8 @@ function _llamaTimeLine (params,nodeStatus){
 			}else{
 				//cuando la request viene vacía
 				seguir = false;
-                nodeStatus.status = 2;
-                nodeStatus.msg = 'Finalizó el proceso de la query: ' + params.screen_name + ' [' + params.since_id+ ', ' + params.max_id + ']';
+                nodeStatus.status = 0;
+                nodeStatus.msg = "Nodo libre";
             }
 		}else{
 			//Se agotaron las peticiones para el token actual, pruebo con otro token
@@ -181,7 +182,7 @@ function initializeDB(){
 	// MongoDB connection a base de datos local
 	smallData = 'twitter';
 	connBig      = mongoose.createConnection('mongodb://localhost/'+bigData);
-	connSmall     = mongoose.createConnection('mongodb://localhost/'+smallData);	
+	connSmall     = mongoose.createConnection('mongodb://localhost/'+smallData);
 	tuitSchema = new mongoose.Schema({
 		twid       : String,
 		screen_name : String,
@@ -222,11 +223,11 @@ function exportToBigdata() {
 					_exportToBigdata(allTuits);
 				}else{
 					console.log("La busqueda no arrojó resultados");
-				}	
+				}
 		})
 		.catch(function(err) {
 			console.log("There was an error");
-		});	
+		});
 }
 function _exportToBigdata(allTuits) {
 	var tuitExport;
@@ -249,7 +250,7 @@ function _exportToBigdata(allTuits) {
 		})
 		.catch(function(err) {
 			console.log("There was an error");
-		})		
+		})
 		.finally(function(){
 			//INTENTO BORRAR EL QUE YA ANALIZO. CONTROLAR BIEN ESTO
 			delete allTuits[firstTuit];

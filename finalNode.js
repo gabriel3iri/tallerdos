@@ -9,13 +9,13 @@ if(process.argv.length==3){
 //Required Section
 var express = require("express")
 	,app = express()
-    ,bodyParser  = require("body-parser")
-    ,methodOverride = require("method-override")
+  ,bodyParser  = require("body-parser")
+  ,methodOverride = require("method-override")
 	,twitterController = require('./controllers/twitterController');
-	
+
 //Other variables
 var nodeStatus = {status: 0, msg: "Nodo libre"};
-	
+
 //**********Definicion de Funciones****************************
 
 function createServer(){
@@ -40,14 +40,12 @@ function createServer(){
 			//console.log(req.query);
 			if (
 				(req.query.screen_name !== undefined) &&
-				(req.query.since_id !== undefined) &&
-				(req.query.max_id !== undefined)
+				(req.query.since_id !== undefined)
 			) {
 				var params = {
-					screen_name: req.query.screen_name,
-					since_id: req.query.since_id,
-					max_id: req.query.max_id,
-					count: 200
+					screen_name: req.query.screen_name
+					,since_id: req.query.since_id
+					,count: 200
 				};
 				console.log("params",params);
 				twitterController.llamaTimeLine(params, nodeStatus, function () {});
@@ -82,7 +80,7 @@ function createServer(){
 
 	app.listen(port, function() {
 		console.log("Node server running on http://localhost:" + port);
-	});	
+	});
 }
 
 //**********FIN Definicion de Funciones****************************
