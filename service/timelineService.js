@@ -1,89 +1,71 @@
 
 var TwitterService = require('./twitterService');
+var mongoose = require('mongoose')
 var Promise = require('bluebird');
 Promise.promisifyAll(TwitterService);
+Promise.promisifyAll(mongoose);
 
+var conn     = mongoose.createConnection('mongodb://localhost/bigdata');
+var searchSchema = new mongoose.Schema({
+  max_id       : String,
+  screen_name : String,
+  date       : Date
+});
+searcheable = conn.model('timelineSearches', searchSchema);
+
+/*
+//INSERCION DE PRUEBA
+	var ns = new searcheable({screen_name:'larocapuerca',date:'2016-10-10',max_id:10000});
+  ns.save(function(err){
+    if(err){
+      console.log('err',err);
+    }
+  });
+*/
 /*
  * Params: screen_name, cant nodes
  * Return: array de str_id (desde, hasta)
  */
-exports.getIntervalsArray = function (screenName, nodes) {
-    var interval = new Array();
-    var userInfo
-        ,search
-        ,sinceDate
-        ,toDate
-        ,daysDiff
-        ,daysPerNode
-        ,sinceIdStr
-        ,toIdStr
-        ,maxId;
+exports.getIntervalsArray = function (users,cb) {
+    _getIntervalsArray(users,[], cb);
+}
 
-    //transformé el llamado en promise
-    return new Promise(function(resolve, reject) {
-        interval = TwitterService.userShow(screenName)
-            .then(function (data) {
-                //console.log('then ',data);
-                userInfo = data;
-                //se busca en la tabla de búsquedas el screen_name
-                search = lookForQuery(screenName);
-                if (search != false) {
-                    //encontró la busqueda en la tabla
-                    //TODO: el since_id y la "fecha desde" se toman de esa tabla de búsquedas
-                } else {
-                    //TODO: buscar la "fecha desde" en la tabla de dates
-                    sinceDate = userInfo.user_created_at;
-                    toDate = userInfo.created_at; //fecha de creación del último tweet del user
-                    maxId = userInfo.id_str;
-                    //se consulta si la cantidad de días entre fechas es mayor que la cantidad de nodes
-                    daysDiff = getDaysDiff(sinceDate, toDate);
-                    console.log(sinceDate, toDate, 'entonces: ', daysDiff);
-                    if (daysDiff > nodes) {
-                        //se hace la división de días para cada nodo
-                        daysPerNode = Math.floor(daysDiff / nodes);
-                        //TODO: ir con este intervalo a la tabla de dates para conseguir los str_id
-                        //interval = getIntervalArray(sinceDate, toDate, maxId, nodes, daysPerNode);
-                        //ojo que esto está harcodeado :O
-                        interval = [
-                            {
-                                "node": 0,
-                                "screen_name": "twitter_user",
-                                "since_id": "1",
-                                "max_id": "10"
-                            },
-                            {
-                                "node": 1,
-                                "screen_name": "twitter_user",
-                                "since_id": "11",
-                                "max_id": "20"
-                            }
-                        ];
-                    } else {
-                        //no hay al menos un día por nodo
-                        //TODO: Hay que dividir de otra manera
-                        interval = [];
-                    }
-                    return interval;
-                }
-            })
-            .catch(function (err) {
-                interval = false;
-                console.log(err);
-            })
-            .finally(function () {
-                //console.log('finally ',userInfo);
-                resolve(interval);
-            });
-        //resolve(interval);
-    });
+
+function _getIntervalsArray(users, intervalReturn, cb){
+  // No necesitamos pedir mas la info del usuario, porque cada
+  // nodo procesa todo el timeline o si ya se realizo la busqueda antes,
+  //se busca a partir del maximo resultado guardado
+  var currentUser = users.shift();
+  lookForQuery(currentUser).then(function(maxId){
+    // se va queda solo con el max_id que haya devuelto esa busqueda
+    // y lo va a usar como since_id. El resto no nos sirve mas
+    intervalReturn.push({screen_name:currentUser,since_id:maxId});
+    if(users.length>0){
+      _getIntervalsArray(users, intervalReturn, cb);
+    }
+    else{
+      cb(intervalReturn);
+    }
+  })
 }
 
 /*
  * Busca en la base de queries si ya existe
  */
 function lookForQuery(screenName) {
-    //TODO: desarrollar
-    return false;
+  return new Promise(function(resolve, reject) {
+    searcheable.findAsync({screen_name:screenName}, '')
+    .then(function(data){
+      if(data.length>0){
+        resolve(data[0].max_id);
+      }else{
+        resolve('1')
+      }
+    })
+    .catch(function(err) {
+    	console.log("There was an error");
+    });
+  });
 }
 
 // Retorna la diferencia en días entre dos fechas
