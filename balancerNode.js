@@ -25,12 +25,14 @@ var express = require("express")
 	var router = express.Router();
 	router.get('/', function(req, res) {
 		res.send("<h1>Este es el Nodo Balanceador</h1>"+
-					"<ul><li>/timeline?screen_name -> para pedir el timeline de un usuario </li>"+
+					"<ul><li>/timeline?screen_name -> para pedir el timeline de un usuario. "+
+					" Ejemplo http://localhost:7777/timeline?screen_name=larocapuerca*castordecrema*BassTincho</li>"+
 					"<li>/search?query -> para buscar por palabra clave </li></ul>");
 	});
 
 	router.get('/timeline', function(req, res) {
-		//console.log(req.query);
+		//EJEMPLO DE REQUEST A CORRER:
+		//http://localhost:7777/timeline?screen_name=larocapuerca*castordecrema*BassTincho
 		if(req.query.screen_name !== undefined){
 			// hago el .then del promise del llamaTimeline
 			balancerController.llamaTimeLine(req.query.screen_name)
@@ -49,5 +51,4 @@ var express = require("express")
 		console.log("Node server running on http://localhost:" + port);
 	});
 
-	//balancerController.checkNodes();
 })();

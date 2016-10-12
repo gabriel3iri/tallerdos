@@ -37,7 +37,6 @@ exports.llamaTimeLine = function(screenNames) {
  * 1: ocupado
  * 2: apagado
  */
-
 function _checkNodes(items, index,callBack) {
 	var nodo = items[index];
 	var requestString = nodo.protocol + '://' + nodo.host+ ':' + nodo.port  + '/status';
