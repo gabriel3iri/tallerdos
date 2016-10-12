@@ -1,15 +1,8 @@
-var MathService = require('../service/mathService')
-	,TwitterService = require('../service/twitterService')
-	,DBService = require('../service/DBService')
-  ,TimelineService = require('../service/timelineService')
-	,mongoose = require('mongoose')
-	,Twitter = require('twitter');
-	var Promise = require('bluebird');
+var TimelineService = require('../service/timelineService')
+	,mongoose = require('mongoose');
+var Promise = require('bluebird');
 
-	Promise.promisifyAll(mongoose);
-
-
-
+Promise.promisifyAll(mongoose);
 // Request
 var request = require("request");
 // Busco los nodos conocidos
@@ -67,44 +60,46 @@ function _checkNodes(items, index,callBack) {
 }
 
 function _sendRequests(){
-		console.log("chequea busquedas pendientes");
+		console.log("Chequea busquedas pendientes");
 		if(currentSearches.length>0){
+			nodes= [];
 			//Si tengo algo para buscar, entonces chequeo el estado de los nodos
-			_checkNodes(known.nodes,0,function(){
-				for(var i=0;i<nodes.length;i++){
-					var nodo = nodes[i];
-					//si encuentro uno libre entonces mando el request
-					if(nodo.status==0){
-						var requestNodo = nodo.protocol + '://' + nodo.host+ ':' + nodo.port
-														+ '/timeline?screen_name='+currentSearches[0].screen_name
-														+"&since_id="+currentSearches[0].since_id;
-						console.log("pide la request ",requestNodo);
-						currentSearches.shift();
-						callNode(requestNodo);
-						//TODO agregar a una cola de busquedas activas
+			_checkNodes(known.nodes,0,
+				function(){//es el callback
+					for(var i=0;i<nodes.length;i++){
+						var nodo = nodes[i];
+						//si encuentro uno libre entonces mando el request
+						if(nodo.status==0){
+							var requestNodo = nodo.protocol + '://' + nodo.host+ ':' + nodo.port
+															+ '/timeline?screen_name='+currentSearches[0].screen_name
+															+"&since_id="+currentSearches[0].since_id;
+							console.log("pide la request ",requestNodo);
+							callNode(requestNodo,currentSearches[0].screen_name);
+							currentSearches.shift();
+							//TODO agregar a una cola de busquedas activas
+							if(currentSearches.length==0){
+								//Ver como cortar si no tiene busquedas encoladas
+								break;
+							}
+						}
 					}
-					if(currentSearches.length==0){
-						//Ver como cortar si no tiene busquedas encoladas
-						break;
-					}
-				}
-			});
+				});
 		}
 }
 
 function initializeRequests(){
-	setInterval(
-		_sendRequests, 12000);
+	setInterval(_sendRequests, 12000);
 }
 
 /*
 Llama al nodo con el timeline y el limite que le diga
 */
-function callNode(requestNodo){
+function callNode(requestNodo,screen_name){
 	request(requestNodo, function(error, response, body) {
 		if(!error){
-			//TODO insertar que se hizo la busqueda, primero buscar el max_id
-			// en la tabla de tuits para ese timeline
+			//No pude hacer que guarde aca porque para las busquedas grandes
+			//parece que se va por timeout aca y no espera a la respuesta
+			console.log(body);
 		}
 	});
 }

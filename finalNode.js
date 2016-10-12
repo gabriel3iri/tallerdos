@@ -12,6 +12,8 @@ var express = require("express")
   ,bodyParser  = require("body-parser")
   ,methodOverride = require("method-override")
 	,twitterController = require('./controllers/twitterController');
+var TimelineService = require('./service/timelineService');
+
 
 //Other variables
 var nodeStatus = {status: 0, msg: "Nodo libre"};
@@ -47,9 +49,25 @@ function createServer(){
 					,since_id: req.query.since_id
 					,count: 200
 				};
+				res.send("busqueda realizandose en background");
 				console.log("params",params);
-				twitterController.llamaTimeLine(params, nodeStatus, function () {});
-				res.send("El proceso está corriendo en background.");
+				twitterController.llamaTimeLine(params, nodeStatus, function() {
+					console.log("Termino la busqueda");
+					//Tuve que hacer esto aca porque si tarda se va por timeout
+					//el response
+					TimelineService.lookForMaxResult(req.query.screen_name)
+						.then(function(maxId){
+							var date = new Date();
+							var currentDate = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
+							var finishSearch = {
+																	screen_name:req.query.screen_name
+																	,date:currentDate
+																	,max_id:maxId
+																 };
+							TimelineService.registerFinishSearch(finishSearch);
+						});
+				});
+
 			} else {
 				res.send("Faltan parámetros. Debes especificar: screen_name, since_id, max_id");
 			}

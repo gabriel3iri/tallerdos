@@ -3,9 +3,9 @@ var MathService = require('../service/mathService')
 	,DBService = require('../service/DBService')
 	,mongoose = require('mongoose')
 	,Twitter = require('twitter');
-	var Promise = require('bluebird');
+var Promise = require('bluebird');
 
-	Promise.promisifyAll(mongoose);
+Promise.promisifyAll(mongoose);
 
 var credentialNumber
 	,credentials
@@ -19,10 +19,10 @@ var credentialNumber
 	,connSmall
 	,connBig;
 
-exports.llamaTimeLine = function (params,nodeStatus){
+exports.llamaTimeLine = function (params,nodeStatus,cb){
 	//Vacio la base temporal en cada vuelta
 	DBService.cleanData(tuitDBSmall,smallData);
-	_llamaTimeLine(params,nodeStatus);
+	_llamaTimeLine(params,nodeStatus,cb);
 }
 
 exports.llamaSearchTweet = function (params,nodeStatus){
@@ -34,30 +34,22 @@ exports.llamaSearchTweet = function (params,nodeStatus){
 /*
  * Método statuses/user_timeline de la API
  */
-function _llamaTimeLine (params,nodeStatus){
-    var metodoApi = 'statuses/user_timeline';
+function _llamaTimeLine (params,nodeStatus,cb){
+  var metodoApi = 'statuses/user_timeline';
 	var newTuit
 		,nextCredential
-		,date
-		,time
 		,seguir
 		,maxId;
-
 	// Cambio el estado del nodo
-    nodeStatus.status = 1;
+  nodeStatus.status = 1;
 	seguir =true;
 	client.get(metodoApi, params, function(error, tweets, response){
-		//console.log("Iniciando la recolección...");
-		date = new Date();
-		time = date.getHours()+":"+date.getMinutes()+":"+date.getSeconds();
 		if (!error) {
-			//console.log("length", tweets.length);
-			//console.log("tw", tweets);
 			if(tweets.length){
 				//recorro los 20 tweets que da la API por página
 				for(t in tweets){
-					//maxId = MathService.stringDec(tweets[t].id_str) ;
-					maxId =tweets[t].id_str;
+					maxId = MathService.stringDec(tweets[t].id_str) ;
+					//maxId =tweets[t].id_str;
 					//Defino el objeto, que coincide con el schema de mogoose
 					tweet = {
 						twid: tweets[t].id_str,
@@ -66,7 +58,7 @@ function _llamaTimeLine (params,nodeStatus){
 						date: tweets[t].created_at
 					};
 					if(t == 1) {
-                        nodeStatus.msg = 'Procesando tuit ' + tweet.twid;
+          	nodeStatus.msg = 'Procesando tuit ' + tweet.twid;
 						console.log('Analizando: ' + tweet.twid + ' ...');
 					}
 					//Acá meto el tuit en el schema que creó al principio
@@ -79,29 +71,28 @@ function _llamaTimeLine (params,nodeStatus){
 						}
 					});
 				}
-
 				params.max_id = maxId;
 				//console.log('Ejecutado correctamente', time);
 			}else{
 				//cuando la request viene vacía
 				seguir = false;
-                nodeStatus.status = 0;
-                nodeStatus.msg = "Nodo libre";
-            }
+        nodeStatus.status = 0;
+        nodeStatus.msg = "Nodo libre";
+        }
 		}else{
 			//Se agotaron las peticiones para el token actual, pruebo con otro token
 			console.log('Error: ',error);
 			nextCredential = getNextCredential();
-            credentialNumber = nextCredential;
+      credentialNumber = nextCredential;
 			client = new Twitter(credentials[nextCredential]);
-            nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
+      nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
 			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
 		}
 		if(seguir){
-			_llamaTimeLine(params,nodeStatus);
+			_llamaTimeLine(params,nodeStatus,cb);
 		}else{
 			//Terminó. Entonces tiene que empezar a pasar todo
-			exportToBigdata();
+			exportToBigdata(cb);
 		}
 	});
 }
@@ -148,8 +139,7 @@ function _llamaSearchTweet(params,nodeStatus){
                         }
                     });
 				}
-
-                params.max_id = maxId;
+				params.max_id = maxId;
 			}else{
 				//cuando la request viene vacía
 				console.log('Finalizó el proceso',params.q);
@@ -170,7 +160,7 @@ function _llamaSearchTweet(params,nodeStatus){
 			_llamaSearchTweet(params,nodeStatus);
 		}else{
 			//Terminó. Entonces tiene que empezar a pasar todo
-			exportToBigdata();
+			exportToBigdata(cb);
 		}
 	});
 }
@@ -211,7 +201,7 @@ function getNextCredential() {
 }
 
 // Exporta los documentos de la collection local a bigdata
-function exportToBigdata() {
+function exportToBigdata(cb) {
 	console.log("exportando a bigData");
     var allTuits = new Array();
     tuitDBSmall.findAsync({}, '')
@@ -220,7 +210,7 @@ function exportToBigdata() {
 					allTuits.push(data[index]);
 				}
 				if(allTuits.length>0){
-					_exportToBigdata(allTuits);
+					_exportToBigdata(allTuits,cb);
 				}else{
 					console.log("La busqueda no arrojó resultados");
 				}
@@ -229,7 +219,7 @@ function exportToBigdata() {
 			console.log("There was an error");
 		});
 }
-function _exportToBigdata(allTuits) {
+function _exportToBigdata(allTuits,cb) {
 	var tuitExport;
 	var firstTuit ;
 	for (firstTuit in allTuits) break;
@@ -255,7 +245,11 @@ function _exportToBigdata(allTuits) {
 			//INTENTO BORRAR EL QUE YA ANALIZO. CONTROLAR BIEN ESTO
 			delete allTuits[firstTuit];
 			if(allTuits.length>(parseInt(firstTuit)+1)){
-				_exportToBigdata(allTuits);
+				_exportToBigdata(allTuits,cb);
+			}
+			else{
+				//Termino, entonces ejecuto el callback
+				cb();
 			}
 		});
 }
