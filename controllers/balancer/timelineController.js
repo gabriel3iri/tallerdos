@@ -1,4 +1,5 @@
 var TimelineService = require('../../service/balancer/timelineService')
+	,UtilService = require('../../service/util/utilService')
 	,mongoose = require('mongoose');
 var Promise = require('bluebird');
 
@@ -10,9 +11,6 @@ var knownNodesFile = 'knownNodes.json';
 var fs = require('fs');
 var known = JSON.parse(fs.readFileSync(knownNodesFile, 'utf8'));
 var currentSearches = [];
-var nodes = [];
-
-
 
 exports.llamaTimeLine = function(screenNames) {
     var interval;
@@ -30,41 +28,13 @@ exports.llamaTimeLine = function(screenNames) {
     });
 }
 
-/*
- * Consulta el estado de cada nodo
- * y agrega un nuevo attributo: status
- * 0: libre
- * 1: ocupado
- * 2: apagado
- */
-function _checkNodes(items, index,callBack) {
-	var nodo = items[index];
-	var requestString = nodo.protocol + '://' + nodo.host+ ':' + nodo.port  + '/status';
-	request(requestString, function(error, response, body) {
-		if(!error){
-				var jsonResponse = JSON.parse(body);
-				nodo.status = jsonResponse.status;
-		}else{
-				nodo.status = 2;
-		}
-		//es el array con los nodos actualizados con el estado
-		nodes.push(nodo);
-		index++;
-		if(items.length > index) {
-			_checkNodes(items, index,callBack)
-		}else{
-			callBack();
-		}
-	});
-}
 
 function _sendRequests(){
-		console.log("Chequea busquedas pendientes");
+		console.log("Chequea busquedas pendientes -> Timeline");
 		if(currentSearches.length>0){
-			nodes= [];
 			//Si tengo algo para buscar, entonces chequeo el estado de los nodos
-			_checkNodes(known.nodes,0,
-				function(){//es el callback
+				UtilService.checkNodes(known.nodes,
+				function(nodes){//es el callback
 					for(var i=0;i<nodes.length;i++){
 						var nodo = nodes[i];
 						//si encuentro uno libre entonces mando el request

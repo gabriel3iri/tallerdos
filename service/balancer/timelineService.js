@@ -78,6 +78,7 @@ function _getIntervalsArray(users, intervalReturn, cb){
  */
 function lookForQuery(screenName) {
   return new Promise(function(resolve, reject) {
+    //si queda con el registro de maximo _id
     searcheable.findOne({screen_name:screenName}).sort('-_id')
       .exec(
         function(err,data){
@@ -90,25 +91,6 @@ function lookForQuery(screenName) {
   });
 }
 
-
-
-// Devuelve la fecha más cercana a la que tenemos
-function getBestDate(nodeDate, dateCollection) {
-    var nodeDate = new Date(nodeDate);
-    var bestDate = dateCollection.length;
-    var bestDiff = -(new Date(0,0,0)).valueOf();
-    var currDiff = 0;
-    var i;
-
-    for(i = 0; i < days.length; ++i){
-        currDiff = Math.abs(days[i] - nodeDate);
-        if(currDiff < bestDiff){
-            bestDate = i;
-            bestDiff = currDiff;
-        }
-    }
-    return dateCollection[bestDate];
-}
 function initializeDB(){
 	// MongoDB connection a big data
 	conn      = mongoose.createConnection('mongodb://localhost/bigdata');

@@ -1,7 +1,7 @@
 var SearchService = require('../../service/balancer/searchService')
 	,UtilService = require('../../service/util/utilService')
-	,mongoose = require('mongoose');
-var Promise = require('bluebird');
+	,mongoose = require('mongoose')
+	,Promise = require('bluebird');
 
 Promise.promisifyAll(mongoose);
 // Request
@@ -27,7 +27,7 @@ exports.search = function(query) {
 }
 
 function _sendRequests(){
-		console.log("Chequea busquedas pendientes");
+		console.log("Chequea busquedas pendientes -> Search");
 		if(currentSearches.length>0){
 			//Si tengo algo para buscar, entonces chequeo el estado de los nodos
 			UtilService.checkNodes(known.nodes,
@@ -59,7 +59,7 @@ function initializeRequests(){
 }
 
 /*
-Llama al nodo con el timeline y el limite que le diga
+Llama al nodo con el search y el rango definido de fechas
 */
 function callNode(requestNodo){
 	request(requestNodo, function(error, response, body) {
@@ -70,4 +70,6 @@ function callNode(requestNodo){
 		}
 	});
 }
+//no lo hago empezar de una porque sino el del timeline
+// se ejecuta en el mismo momento
 setTimeout(function(){ initializeRequests(); }, 5000);

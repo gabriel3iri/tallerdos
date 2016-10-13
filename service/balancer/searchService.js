@@ -1,6 +1,8 @@
 
 var mongoose = require('mongoose')
 var Promise = require('bluebird');
+var UtilService = require('../../service/util/utilService');
+
 Promise.promisifyAll(mongoose);
 var conn
   ,tuitSchema
@@ -9,38 +11,44 @@ var conn
   ,searcheable;
 
 /*
- * Params: screen_name, cant nodes
- * Return: array de str_id (desde, hasta)
+Recibo un query y devuelvo el intervalo de dias que
+tiene que buscar, consultando si ya se hizo antes
+esa consulta.
  */
 exports.getIntervalsArray = function (query) {
   var intervalReturn= [];
+  var currentDate =new Date();
+  var dateTo
+      ,diff
+      ,daysTo;
   return new Promise(function(resolve, reject) {
+    //Chequeo si ya se busco antes
     lookForQuery(query).then(function(date){
-      var currentDate = new Date();
-      currentDate =currentDate.getFullYear()+"-"+(currentDate.getMonth()+1)+"-"+(currentDate.getDate()+1);
-      var daysTo;
-      console.log("date",date);
+      currentDate =currentDate.getFullYear()+"-"+(currentDate.getMonth()+1)+"-"+(currentDate.getDate());
+      //le sumo 1 dia al actual para poder buscarlo
+      dateTo = UtilService.addDay(currentDate);
       //Si no se hizo nunca la busqueda entonces busco 7 dias para atras
       if(date==-1){
         daysTo=6;
       }else{
-        var diff = getDaysDiff(date,currentDate);
+        diff = UtilService.getDaysDiff(date,dateTo);
         console.log("diff",diff);
         //Si ya paso una semana de la busqueda, busco los 7 dias
         if(diff>6){
           daysTo=6;
         }else{
+          //sino busco los dias que le falten desde la busqueda anterior
           daysTo=diff;
         }
 
       }
       //Armo los intervalos con el daysTo que calcule
-      var untilDate = currentDate;
-      var sinceDate = decDay(untilDate);
+      var untilDate = dateTo;
+      var sinceDate = UtilService.decDay(untilDate);
       intervalReturn.push({query:query,since:sinceDate,until: untilDate});
       for(var x=0;x<daysTo;x++){
         untilDate =sinceDate;
-        sinceDate = decDay(sinceDate);
+        sinceDate = UtilService.decDay(sinceDate);
         intervalReturn.push({query:query,since:sinceDate,until: untilDate});
       }
       resolve(intervalReturn);
@@ -76,19 +84,6 @@ function lookForQuery(query) {
   });
 }
 
-function decDay(date) {
-    var result = new Date(date);
-    result.setUTCHours(10);
-    result.setDate(result.getDate() -1);
-    return result.getFullYear()+"-"+(result.getMonth()+1)+"-"+result.getDate();
-}
-// Retorna la diferencia en días entre dos fechas
-function getDaysDiff(sinceDate, toDate) {
-    var oneDay = 24*60*60*1000;	// hours*minutes*seconds*milliseconds
-    var sinceDate = new Date(sinceDate);
-    var toDate = new Date(toDate);
-    return Math.abs((sinceDate.getTime() - toDate.getTime())/(oneDay));
-}
 
 function initializeDB(){
 	// MongoDB connection a big data
