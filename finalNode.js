@@ -11,8 +11,8 @@ var express = require("express")
 	,app = express()
   ,bodyParser  = require("body-parser")
   ,methodOverride = require("method-override")
-	,twitterController = require('./controllers/twitterController');
-var TimelineService = require('./service/timelineService');
+	,twitterController = require('./controllers/nodes/twitterController');
+var TimelineService = require('./service/balancer/timelineService');
 
 
 //Other variables
@@ -51,7 +51,9 @@ function createServer(){
 				};
 				res.send("busqueda realizandose en background");
 				console.log("params",params);
-				twitterController.llamaTimeLine(params, nodeStatus, function() {
+				twitterController.llamaTimeLine(params, nodeStatus,port, function() {
+					nodeStatus.status = 0;
+					nodeStatus.msg = 'Nodo Libre';
 					console.log("Termino la busqueda");
 					//Tuve que hacer esto aca porque si tarda se va por timeout
 					//el response
@@ -79,14 +81,22 @@ function createServer(){
 			res.send(nodeStatus.msg);
 		} else {
 			console.log(req.query);
-			if(req.query.q !== undefined){
-					var since_id=  req.query.since_id!==undefined?req.query.since_id:null;
-					var max_id= req.query.max_id!==undefined?req.query.since_id:null;
-				var params = {q: req.query.q, count:100,
-								since_id: req.query.since_id,
-								max_id: req.query.max_id
+			if(req.query.query !== undefined
+				&&req.query.since !== undefined
+				&&req.query.until !== undefined
+				){
+				var params = {
+								q: req.query.query
+								,count:100
+								,since: req.query.since
+								,until: req.query.until
 				};
-				twitterController.llamaSearchTweet(params, nodeStatus);
+				console.log("params",params);
+				twitterController.llamaSearchTweet(params, nodeStatus,port,function(){
+					nodeStatus.status = 0;
+					nodeStatus.msg = 'Nodo Libre';
+					console.log("termino");
+				});
 			}else{
 				res.send("Faltan parámetros. Debes especificar: q");
 			}

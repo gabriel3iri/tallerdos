@@ -1,5 +1,5 @@
 
-var TwitterService = require('./twitterService');
+var TwitterService = require('../nodes/twitterService');
 var mongoose = require('mongoose')
 var Promise = require('bluebird');
 Promise.promisifyAll(TwitterService);

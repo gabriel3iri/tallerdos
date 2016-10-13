@@ -9,9 +9,11 @@ if(process.argv.length==3){
 //Required Section
 var express = require("express")
 	,app = express()
-    ,bodyParser  = require("body-parser")
-    ,methodOverride = require("method-override")
-	,balancerController = require('./controllers/balancerController');
+  ,bodyParser  = require("body-parser")
+  ,methodOverride = require("method-override")
+	,timelineController = require('./controllers/balancer/timelineController')
+	,searchController = require('./controllers/balancer/searchController');
+
 
 
 //**********Definicion de Funciones****************************
@@ -31,11 +33,21 @@ var express = require("express")
 	});
 
 	router.get('/timeline', function(req, res) {
-		//EJEMPLO DE REQUEST A CORRER:
-		//http://localhost:7777/timeline?screen_name=larocapuerca*castordecrema*BassTincho
 		if(req.query.screen_name !== undefined){
 			// hago el .then del promise del llamaTimeline
-			balancerController.llamaTimeLine(req.query.screen_name)
+			timelineController.llamaTimeLine(req.query.screen_name)
+				.then(function (result) {
+					console.log('interval ',result);
+				});
+			res.send("Process running in background.");
+		}else{
+			res.send("Not enough params.");
+		}
+	});
+
+	router.get('/search', function(req, res) {
+		if(req.query.query !== undefined){
+			searchController.search(req.query.query)
 				.then(function (result) {
 					console.log('interval ',result);
 				});

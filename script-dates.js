@@ -12,9 +12,9 @@ var credential =
 var client = new Twitter(credential);
 
 var params = {
-  q: 'juan roman riquelme'
-  ,since: '2016-09-01'
-	,until: '2016-10-02'
+  q: 'castores'
+  ,since: '2016-10-8'
+	,until: '2016-10-9'
   ,count: 100
   }
 

@@ -1,4 +1,4 @@
-var TimelineService = require('../service/timelineService')
+var TimelineService = require('../../service/balancer/timelineService')
 	,mongoose = require('mongoose');
 var Promise = require('bluebird');
 
