@@ -70,5 +70,4 @@ function callNode(requestNodo){
 		}
 	});
 }
-
-initializeRequests();
+setTimeout(function(){ initializeRequests(); }, 5000);

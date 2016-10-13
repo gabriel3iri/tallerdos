@@ -13,6 +13,8 @@ var express = require("express")
   ,methodOverride = require("method-override")
 	,twitterController = require('./controllers/nodes/twitterController');
 var TimelineService = require('./service/balancer/timelineService');
+var SearchService = require('./service/balancer/searchService');
+
 
 
 //Other variables
@@ -95,6 +97,12 @@ function createServer(){
 				twitterController.llamaSearchTweet(params, nodeStatus,port,function(){
 					nodeStatus.status = 0;
 					nodeStatus.msg = 'Nodo Libre';
+					var finishSearch = {
+															query :req.query.query
+															,since: req.query.since
+															,until: req.query.until
+														 };
+					SearchService.registerFinishSearch(finishSearch);
 					console.log("termino");
 				});
 			}else{

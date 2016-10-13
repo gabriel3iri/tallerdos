@@ -90,13 +90,7 @@ function lookForQuery(screenName) {
   });
 }
 
-// Retorna la diferencia en días entre dos fechas
-function getDaysDiff(sinceDate, toDate) {
-    var oneDay = 24*60*60*1000;	// hours*minutes*seconds*milliseconds
-    var sinceDate = new Date(sinceDate);
-    var toDate = new Date(toDate);
-    return Math.abs((sinceDate.getTime() - toDate.getTime())/(oneDay));
-}
+
 
 // Devuelve la fecha más cercana a la que tenemos
 function getBestDate(nodeDate, dateCollection) {
