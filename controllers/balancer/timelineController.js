@@ -1,19 +1,14 @@
 var TimelineService = require('../../service/balancer/timelineService')
 	,UtilService = require('../../service/util/utilService')
-	,mongoose = require('mongoose');
+	,DBService = require('../../service/util/DBService');
+
 var Promise = require('bluebird');
 
-Promise.promisifyAll(mongoose);
-// Request
 var request = require("request");
-// Busco los nodos conocidos
-var knownNodesFile = 'knownNodes.json';
-var fs = require('fs');
-var known = JSON.parse(fs.readFileSync(knownNodesFile, 'utf8'));
+
 var currentSearches = [];
 
 exports.llamaTimeLine = function(screenNames) {
-    var interval;
 		//No vamos a necesitar mas pedir el perfil de cada usuario
 		//Por ahora dejo que puedan pedir mas de un screen_name separados por '*'
     return new Promise(function(resolve, reject) {
@@ -28,12 +23,11 @@ exports.llamaTimeLine = function(screenNames) {
     });
 }
 
-
 function _sendRequests(){
 		console.log("Chequea busquedas pendientes -> Timeline");
 		if(currentSearches.length>0){
 			//Si tengo algo para buscar, entonces chequeo el estado de los nodos
-				UtilService.checkNodes(known.nodes,
+				UtilService.checkNodes(
 				function(nodes){//es el callback
 					for(var i=0;i<nodes.length;i++){
 						var nodo = nodes[i];
@@ -43,13 +37,28 @@ function _sendRequests(){
 															+ '/timeline?screen_name='+currentSearches[0].screen_name
 															+"&since_id="+currentSearches[0].since_id;
 							console.log("pide la request ",requestNodo);
-							callNode(requestNodo,currentSearches[0].screen_name);
-							currentSearches.shift();
-							//TODO agregar a una cola de busquedas activas
-							if(currentSearches.length==0){
-								//Ver como cortar si no tiene busquedas encoladas
-								break;
-							}
+							var aliveSearch = {
+								screen_name	: currentSearches[0].screen_name,
+								since_id		: currentSearches[0].since_id,
+								request     : requestNodo,
+								protocolo		:	nodo.protocol,
+								host				: nodo.host,
+								port				: nodo.port,
+								type        : 'timeline',
+								date        : UtilService.getCurrentDate()
+							};
+							var _id ;
+							DBService.registerAliveSearch(aliveSearch)
+							.then(function(id){
+								_id = id;
+								requestNodo =requestNodo+"&_id="+_id;
+								callNode(requestNodo);
+								currentSearches.shift();
+
+								if(currentSearches.length==0){
+									i=nodes.length;
+								}
+							});
 						}
 					}
 				});
@@ -63,7 +72,7 @@ function initializeRequests(){
 /*
 Llama al nodo con el timeline y el limite que le diga
 */
-function callNode(requestNodo,screen_name){
+function callNode(requestNodo){
 	request(requestNodo, function(error, response, body) {
 		if(!error){
 			//No pude hacer que guarde aca porque para las busquedas grandes

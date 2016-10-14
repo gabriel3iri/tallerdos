@@ -9,15 +9,7 @@ var conn
   ,tuitDBBig
   ,searchSchema
   ,searcheable;
-/*
-//INSERCION DE PRUEBA
-	var ns = new searcheable({screen_name:'larocapuerca',date:'2016-10-10',max_id:10000});
-  ns.save(function(err){
-    if(err){
-      console.log('err',err);
-    }
-  });
-*/
+
 /*
  * Params: screen_name, cant nodes
  * Return: array de str_id (desde, hasta)
@@ -108,6 +100,7 @@ function initializeDB(){
     date       : Date
   });
   searcheable = conn.model('timelineSearches', searchSchema);
+
 }
 
 initializeDB();

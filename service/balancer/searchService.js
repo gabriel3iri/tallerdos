@@ -17,14 +17,14 @@ esa consulta.
  */
 exports.getIntervalsArray = function (query) {
   var intervalReturn= [];
-  var currentDate =new Date();
+  var currentDate = UtilService.getCurrentDate();
   var dateTo
       ,diff
       ,daysTo;
   return new Promise(function(resolve, reject) {
     //Chequeo si ya se busco antes
     lookForQuery(query).then(function(date){
-      currentDate =currentDate.getFullYear()+"-"+(currentDate.getMonth()+1)+"-"+(currentDate.getDate());
+      //currentDate =currentDate.getFullYear()+"-"+(currentDate.getMonth()+1)+"-"+(currentDate.getDate());
       //le sumo 1 dia al actual para poder buscarlo
       dateTo = UtilService.addDay(currentDate);
       //Si no se hizo nunca la busqueda entonces busco 7 dias para atras
@@ -32,7 +32,6 @@ exports.getIntervalsArray = function (query) {
         daysTo=6;
       }else{
         diff = UtilService.getDaysDiff(date,dateTo);
-        console.log("diff",diff);
         //Si ya paso una semana de la busqueda, busco los 7 dias
         if(diff>6){
           daysTo=6;

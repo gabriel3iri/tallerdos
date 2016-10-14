@@ -1,5 +1,7 @@
 var MathService = require('../../service/util/mathService')
 	,TwitterService = require('../../service/nodes/twitterService')
+	,TimelineService = require('../../service/balancer/timelineService')
+	,SearchService = require('../../service/balancer/searchService')
 	,DBService = require('../../service/util/DBService')
 	,mongoose = require('mongoose')
 	,Twitter = require('twitter');
@@ -33,6 +35,40 @@ exports.llamaSearchTweet = function (params,nodeStatus,nameNodo,cb){
 	_llamaSearchTweet(params,nodeStatus,cb);
 }
 
+exports.toFinishTimeline = function(nodeStatus,screen_name,_id) {
+	nodeStatus.status = 0;
+	nodeStatus.msg = 'Nodo Libre';
+	nodeStatus.currentId = 0;
+	console.log("Termino la busqueda");
+	//Tuve que hacer esto aca porque si tarda se va por timeout
+	//el response
+	TimelineService.lookForMaxResult(screen_name)
+		.then(function(maxId){
+			var date = new Date();
+			var currentDate = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
+			var finishSearch = {
+													screen_name:screen_name
+													,date:currentDate
+													,max_id:maxId
+												 };
+			TimelineService.registerFinishSearch(finishSearch);
+			DBService.removeAliveSearch(_id);
+		});
+};
+
+exports.toFinishSearch = function(nodeStatus,query,since,until,_id){
+	nodeStatus.status = 0;
+	nodeStatus.msg = 'Nodo Libre';
+	nodeStatus.currentId = 0;
+	var finishSearch = {
+											query : query
+											,since: since
+											,until: until
+										 };
+	SearchService.registerFinishSearch(finishSearch);
+	DBService.removeAliveSearch(_id);
+	console.log("termino");
+};
 /*
  * Método statuses/user_timeline de la API
  */
@@ -210,10 +246,11 @@ function exportToBigdata(cb) {
 					_exportToBigdata(allTuits,cb);
 				}else{
 					console.log("La busqueda no arrojó resultados");
+					cb();
 				}
 		})
 		.catch(function(err) {
-			console.log("There was an error");
+			console.log("err",err);
 		});
 }
 function _exportToBigdata(allTuits,cb) {
@@ -236,7 +273,7 @@ function _exportToBigdata(allTuits,cb) {
 			}
 		})
 		.catch(function(err) {
-			console.log("There was an error");
+			console.log("err",err);
 		})
 		.finally(function(){
 			//INTENTO BORRAR EL QUE YA ANALIZO. CONTROLAR BIEN ESTO

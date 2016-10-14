@@ -14,6 +14,8 @@ var express = require("express")
 	,twitterController = require('./controllers/nodes/twitterController');
 var TimelineService = require('./service/balancer/timelineService');
 var SearchService = require('./service/balancer/searchService');
+var DBService = require('./service/util/DBService');
+
 
 
 
@@ -46,6 +48,8 @@ function createServer(){
 				(req.query.screen_name !== undefined) &&
 				(req.query.since_id !== undefined)
 			) {
+				var _id = req.query._id;
+
 				var params = {
 					screen_name: req.query.screen_name
 					,since_id: req.query.since_id
@@ -53,25 +57,12 @@ function createServer(){
 				};
 				res.send("busqueda realizandose en background");
 				console.log("params",params);
-				twitterController.llamaTimeLine(params, nodeStatus,port, function() {
-					nodeStatus.status = 0;
-					nodeStatus.msg = 'Nodo Libre';
-					console.log("Termino la busqueda");
-					//Tuve que hacer esto aca porque si tarda se va por timeout
-					//el response
-					TimelineService.lookForMaxResult(req.query.screen_name)
-						.then(function(maxId){
-							var date = new Date();
-							var currentDate = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
-							var finishSearch = {
-																	screen_name:req.query.screen_name
-																	,date:currentDate
-																	,max_id:maxId
-																 };
-							TimelineService.registerFinishSearch(finishSearch);
-						});
-				});
-
+				nodeStatus.currentId = _id;
+				twitterController
+					.llamaTimeLine(params,nodeStatus,port
+												 ,function(){
+													 twitterController.toFinishTimeline(nodeStatus,req.query.screen_name,_id);
+												 });
 			} else {
 				res.send("Faltan parámetros. Debes especificar: screen_name, since_id, max_id");
 			}
@@ -87,24 +78,26 @@ function createServer(){
 				&&req.query.since !== undefined
 				&&req.query.until !== undefined
 				){
+				var _id = req.query._id;
+				var query =  req.query.query.replace(/-/g, ' ');
 				var params = {
-								q: req.query.query
+								q: query
 								,count:100
 								,since: req.query.since
 								,until: req.query.until
 				};
 				console.log("params",params);
-				twitterController.llamaSearchTweet(params, nodeStatus,port,function(){
-					nodeStatus.status = 0;
-					nodeStatus.msg = 'Nodo Libre';
-					var finishSearch = {
-															query :req.query.query
-															,since: req.query.since
-															,until: req.query.until
-														 };
-					SearchService.registerFinishSearch(finishSearch);
-					console.log("termino");
-				});
+				nodeStatus.currentId = _id;
+				twitterController
+					.llamaSearchTweet(params, nodeStatus,port,
+														function(){
+															twitterController
+														 .toFinishSearch(nodeStatus
+															 							,query
+																						,req.query.since
+																						,req.query.until
+																						,_id);
+														});
 			}else{
 				res.send("Faltan parámetros. Debes especificar: q");
 			}

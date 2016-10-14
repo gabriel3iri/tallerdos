@@ -1,10 +1,21 @@
 var request = require("request");
 var nodes ;
-exports.checkNodes = function(items,callBack){
+// Busco los nodos conocidos
+var knownNodesFile = 'knownNodes.json';
+var fs = require('fs');
+var known = JSON.parse(fs.readFileSync(knownNodesFile, 'utf8'));
+
+
+exports.checkNodes = function(callBack){
 	nodes= [];
-	_checkNodes (items, 0,callBack);
+	_checkNodes (known.nodes, 0,callBack);
 }
 
+exports.getCurrentDate = function(){
+	var currentDate =new Date();
+	currentDate =currentDate.getFullYear()+"-"+(currentDate.getMonth()+1)+"-"+(currentDate.getDate());
+	return currentDate;
+}
 
 exports.decDay = function (date) {
     var result = new Date(date);
@@ -27,9 +38,6 @@ exports.getDaysDiff = function (sinceDate, toDate) {
     var toDate = new Date(toDate);
     return Math.abs((sinceDate.getTime() - toDate.getTime())/(oneDay));
 }
-
-
-
 
 function _checkNodes (items, index,callBack) {
 	var nodo = items[index];
