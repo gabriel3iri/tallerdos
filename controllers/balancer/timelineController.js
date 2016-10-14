@@ -54,7 +54,6 @@ function _sendRequests(){
 								requestNodo =requestNodo+"&_id="+_id;
 								callNode(requestNodo);
 								currentSearches.shift();
-
 								if(currentSearches.length==0){
 									i=nodes.length;
 								}

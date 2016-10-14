@@ -38,7 +38,7 @@ exports.lookForMaxResult = function(screenName) {
 }
 
 exports.registerFinishSearch = function(search){
-  console.log("va a grabar",search);
+  console.log("Registra busqueda: ",search);
   var ns = new searcheable(search);
   ns.save(function(err){
     if(err){
@@ -48,8 +48,6 @@ exports.registerFinishSearch = function(search){
 }
 
 function _getIntervalsArray(users, intervalReturn, cb){
-  // No necesitamos pedir mas la info del usuario, porque cada
-  // nodo procesa todo el timeline o si ya se realizo la busqueda antes,
   //se busca a partir del maximo resultado guardado
   var currentUser = users.shift();
   lookForQuery(currentUser).then(function(maxId){
@@ -95,9 +93,9 @@ function initializeDB(){
 	tuitDBBig = conn.model('Tuit', tuitSchema);
 
   searchSchema = new mongoose.Schema({
-    max_id       : String,
+    max_id      : String,
     screen_name : String,
-    date       : Date
+    date        : Date
   });
   searcheable = conn.model('timelineSearches', searchSchema);
 

@@ -73,7 +73,6 @@ exports.removeAliveSearch = function (_id){
 			date        : Date
 		});
 		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
-		console.log("_id",_id);
 		aliveSearch.findOne({_id:_id}).remove(function(err){
 			if(err){
 				console.log("err",err);

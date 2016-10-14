@@ -57,7 +57,7 @@ exports.getIntervalsArray = function (query) {
 
 
 exports.registerFinishSearch = function(search){
-  console.log("va a grabar",search);
+  console.log("Registra busqueda: ",search);
   var ns = new searcheable(search);
   ns.save(function(err){
     if(err){
