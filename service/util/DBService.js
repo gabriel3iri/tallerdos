@@ -103,6 +103,7 @@ exports.getAliveSearch = function (){
 			type        : String,
 			date        : Date
 		});
+		//Busco las consultas que estan marcadas como activas en la DB
 		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
 		aliveSearch.findAsync({type:"search"},'')
 		.then(function(data){

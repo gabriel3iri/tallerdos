@@ -86,25 +86,38 @@ function checkAliveSearches(){
 	//Pido las busquedas activas a la DB
 	DBService.getAliveSearch("search")
 		.then(function(data){
-			for(index in data){
-				//Por cada una chequeo si sigue con esa busqueda
-				UtilService.sigueVivo(data[index])
-					.then(function(sigue){
-						if(!sigue){
-							//Si no sigue la encolo otra vez porque quedo inconsistente
-							var search = {query:data[index].query
-														,since:UtilService.parseDate(data[index].since)
-														,until: UtilService.parseDate(data[index].until)};
-							console.log("Recupera la busqueda ", search);
-							DBService.removeAliveSearch(data[index]._id)
-							.then(function(){
-								currentSearches.push(search);
-							});
-						}
-					})
+			if(data.length>0){
+				_checkAliveSearches(data);
 			}
 		});
 
+}
+
+function _checkAliveSearches(data){
+	//Por cada una chequeo si sigue con esa busqueda
+	UtilService.sigueVivo(data[0])
+		.then(function(sigue){
+			if(!sigue){
+				//Si no sigue la encolo otra vez porque quedo inconsistente
+				var search = {query:data[0].query
+											,since: UtilService.parseDate(data[0].since)
+											,until: UtilService.parseDate(data[0].until)};
+				console.log("Recupera la busqueda ", search);
+				DBService.removeAliveSearch(data[0]._id)
+				.then(function(){
+					currentSearches.push(search);
+					data.shift();
+					if(data.length>0){
+						_checkAliveSearches(data);
+					}
+				});
+			}else{
+				data.shift();
+				if(data.length>0){
+					_checkAliveSearches(data);
+				}
+			}
+		});
 }
 
 function initializeRequests(){

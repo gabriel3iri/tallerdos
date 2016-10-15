@@ -88,7 +88,7 @@ function createServer(){
 							function(){
 								twitterController
 									.toFinishSearch(nodeStatus
-								 							,query
+								 							,req.query.query
 															,req.query.since
 															,req.query.until
 															,_id);
