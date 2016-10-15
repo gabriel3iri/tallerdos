@@ -16,6 +16,7 @@ tiene que buscar, consultando si ya se hizo antes
 esa consulta.
  */
 exports.getIntervalsArray = function (query) {
+  //initializeDB();
   var intervalReturn= [];
   var currentDate = UtilService.getCurrentDate();
   var dateTo
@@ -50,6 +51,7 @@ exports.getIntervalsArray = function (query) {
         sinceDate = UtilService.decDay(sinceDate);
         intervalReturn.push({query:query,since:sinceDate,until: untilDate});
       }
+    //  conn.close();
       resolve(intervalReturn);
     });
   });
@@ -57,9 +59,11 @@ exports.getIntervalsArray = function (query) {
 
 
 exports.registerFinishSearch = function(search){
+//  initializeDB();
   console.log("Registra busqueda: ",search);
   var ns = new searcheable(search);
   ns.save(function(err){
+  //  conn.close();
     if(err){
       console.log('err',err);
     }
@@ -102,5 +106,4 @@ function initializeDB(){
   });
   searcheable = conn.model('queriesSearches', searchSchema);
 }
-
 initializeDB();

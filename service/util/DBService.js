@@ -42,9 +42,10 @@ exports.registerAliveSearch = function(search){
 			date        : Date
 		});
 		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
-	  console.log("Registra busqueda Activa",search);
+	  console.log("Registra busqueda Activa");
 	  var ns = new aliveSearch(search);
 	  ns.save(function(err,data){
+			conn.close();
 	    if(err){
 	      console.log('err',err);
 				reject();
@@ -74,13 +75,44 @@ exports.removeAliveSearch = function (_id){
 		});
 		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
 		aliveSearch.findOne({_id:_id}).remove(function(err){
+			conn.close();
 			if(err){
 				console.log("err",err);
 				reject();
 			}else{
 				resolve(true);
 			}
-
 		})
+	});
+}
+
+
+exports.getAliveSearch = function (){
+	return new Promise(function(resolve, reject) {
+		var conn      = mongoose.createConnection('mongodb://localhost/bigdata');
+		var aliveSearchesSchema = new mongoose.Schema({
+			query				: String,
+			since				: Date,
+			until				: Date,
+			screen_name	: String,
+			since_id		: String,
+			request     : String,
+			protocolo   : String,
+			host				: String,
+			port				: String,
+			type        : String,
+			date        : Date
+		});
+		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
+		aliveSearch.findAsync({type:"search"},'')
+		.then(function(data){
+			resolve(data);
+		})
+		.catch(function(error){
+			resolve([]);
+		})
+		.finally(function(){
+			conn.close();
+		});
 	});
 }

@@ -15,18 +15,21 @@ var conn
  * Return: array de str_id (desde, hasta)
  */
 exports.getIntervalsArray = function (users,cb) {
-    _getIntervalsArray(users,[], cb);
+  //initializeDB();
+  _getIntervalsArray(users,[], cb);
 }
 /*
 Busca el maximo resultado para un timeline
 */
 exports.lookForMaxResult = function(screenName) {
+//  initializeDB();
   return new Promise(function(resolve, reject) {
     //hace el find por el usuario y ordena por fecha desc
     // y se queda con el primero nomas
     tuitDBBig.findOne({screen_name:screenName}).sort('-date')
       .exec(
         function(err,data){
+          //conn.close();
           if(data){
             //pateo el maximo id para arriba
             resolve(data.twid);
@@ -38,9 +41,11 @@ exports.lookForMaxResult = function(screenName) {
 }
 
 exports.registerFinishSearch = function(search){
+//  initializeDB();
   console.log("Registra busqueda: ",search);
   var ns = new searcheable(search);
   ns.save(function(err){
+    //conn.close();
     if(err){
       console.log('err',err);
     }
@@ -58,6 +63,7 @@ function _getIntervalsArray(users, intervalReturn, cb){
       _getIntervalsArray(users, intervalReturn, cb);
     }
     else{
+    //  conn.close();
       cb(intervalReturn);
     }
   })
@@ -98,7 +104,5 @@ function initializeDB(){
     date        : Date
   });
   searcheable = conn.model('timelineSearches', searchSchema);
-
 }
-
 initializeDB();

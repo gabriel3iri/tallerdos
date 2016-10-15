@@ -13,20 +13,21 @@ exports.checkNodes = function(callBack){
 
 exports.getCurrentDate = function(){
 	var currentDate =new Date();
+	currentDate.setUTCHours(7);
 	currentDate =currentDate.getFullYear()+"-"+(currentDate.getMonth()+1)+"-"+(currentDate.getDate());
 	return currentDate;
 }
 
 exports.decDay = function (date) {
     var result = new Date(date);
-    result.setUTCHours(10);
+    result.setUTCHours(7);
     result.setDate(result.getDate() -1);
     return result.getFullYear()+"-"+(result.getMonth()+1)+"-"+result.getDate();
 }
 
 exports.addDay = function (date) {
     var result = new Date(date);
-    result.setUTCHours(10);
+    result.setUTCHours(7);
     result.setDate(result.getDate() +1);
     return result.getFullYear()+"-"+(result.getMonth()+1)+"-"+result.getDate();
 }

@@ -17,7 +17,7 @@ var SearchService = require('./service/balancer/searchService');
 var DBService = require('./service/util/DBService');
 
 //Other variables
-var nodeStatus = {status: 0, msg: "Nodo libre"};
+var nodeStatus = {status: 0, msg: "Nodo libre", currentId:0};
 
 //**********Definicion de Funciones****************************
 
