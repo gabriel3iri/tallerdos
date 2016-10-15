@@ -23,7 +23,6 @@ exports.search = function(query) {
 }
 
 function sendRequests(){
-		console.log("Chequea busquedas pendientes -> Search");
 		if(currentSearches.length>0){
 			//Si tengo algo para buscar, entonces chequeo el estado de los nodos
 			UtilService.checkNodes(
@@ -84,19 +83,18 @@ function _sendRequests(nodes){
 }
 
 function checkAliveSearches(){
-	console.log("Chequea las busquedas vivas");
 	//Pido las busquedas activas a la DB
-	DBService.getAliveSearch()
+	DBService.getAliveSearch("search")
 		.then(function(data){
 			for(index in data){
 				//Por cada una chequeo si sigue con esa busqueda
-				sigueVivo(data[index])
+				UtilService.sigueVivo(data[index])
 					.then(function(sigue){
 						if(!sigue){
 							//Si no sigue la encolo otra vez porque quedo inconsistente
 							var search = {query:data[index].query
-														,since:data[index].since
-														,until: data[index].until};
+														,since:UtilService.parseDate(data[index].since)
+														,until: UtilService.parseDate(data[index].until)};
 							console.log("Recupera la busqueda ", search);
 							DBService.removeAliveSearch(data[index]._id)
 							.then(function(){
@@ -109,38 +107,16 @@ function checkAliveSearches(){
 
 }
 
-function sigueVivo(nodo){
-	return new Promise(function(resolve, reject) {
-		var requestString = nodo.protocolo + '://' + nodo.host+ ':' + nodo.port  + '/status';
-		request(requestString, function(error, response, body) {
-			if(!error){
-				console.log("body ",body);
-				var jsonResponse = JSON.parse(body);
-				var status = jsonResponse.status;
-				var id = jsonResponse.currentId;
-				console.log("id ",id,"nodo._id ",nodo._id);
-				if(id != nodo._id){
-					console.log("devuelve false");
-					resolve(false);
-				}else{
-					resolve(true);
-				}
-			}else{
-				resolve(false);
-			}
-		});
-	});
-}
 function initializeRequests(){
 	setInterval(sendRequests, 12000);
-	//setInterval(checkAliveSearches, 20000);
+	setInterval(checkAliveSearches, 20000);
 }
 
 /*
 Llama al nodo con el search y el rango definido de fechas
 */
 function callNode(requestNodo){
-	console.log("pide la request ",requestNodo);
+	console.log("Get ",requestNodo);
 	request(requestNodo, function(error, response, body) {
 		if(!error){
 			//No pude hacer que guarde aca porque para las busquedas grandes

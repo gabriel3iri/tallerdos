@@ -1,9 +1,32 @@
 var request = require("request");
+var Promise = require('bluebird');
 var nodes ;
 // Busco los nodos conocidos
 var knownNodesFile = 'knownNodes.json';
 var fs = require('fs');
 var known = JSON.parse(fs.readFileSync(knownNodesFile, 'utf8'));
+
+
+exports.sigueVivo = function (nodo){
+	return new Promise(function(resolve, reject) {
+		var requestString = nodo.protocolo + '://' + nodo.host+ ':' + nodo.port  + '/status';
+		request(requestString, function(error, response, body) {
+			if(!error){
+				var jsonResponse = JSON.parse(body);
+				var status = jsonResponse.status;
+				var id = jsonResponse.currentId;
+				if(id != nodo._id){
+					resolve(false);
+				}else{
+					resolve(true);
+				}
+			}else{
+				resolve(false);
+			}
+		});
+	});
+}
+
 
 
 exports.checkNodes = function(callBack){
@@ -30,6 +53,11 @@ exports.addDay = function (date) {
     result.setUTCHours(7);
     result.setDate(result.getDate() +1);
     return result.getFullYear()+"-"+(result.getMonth()+1)+"-"+result.getDate();
+}
+
+exports.parseDate = function(result){
+	result.setUTCHours(7);
+	return result.getFullYear()+"-"+(result.getMonth()+1)+"-"+result.getDate();
 }
 
 // Retorna la diferencia en días entre dos fechas

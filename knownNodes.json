@@ -16,5 +16,11 @@
       "port": "4002",
       "protocol": "http"
     }
+    ,
+    {
+      "host": "localhost",
+      "port": "4003",
+      "protocol": "http"
+    }
   ]
 }

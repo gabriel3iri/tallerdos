@@ -24,7 +24,6 @@ exports.llamaTimeLine = function(screenNames) {
 }
 
 function sendRequests(){
-		console.log("Chequea busquedas pendientes -> Timeline");
 		if(currentSearches.length>0){
 			//Si tengo algo para buscar, entonces chequeo el estado de los nodos
 			UtilService.checkNodes(
@@ -81,15 +80,42 @@ function _sendRequests(nodes){
 }
 
 
+function checkAliveTimelines(){
+	//Pido las busquedas activas a la DB
+	DBService.getAliveSearch("timeline")
+		.then(function(data){
+			for(index in data){
+				//Por cada una chequeo si sigue con esa busqueda
+				UtilService.sigueVivo(data[index])
+					.then(function(sigue){
+						if(!sigue){
+							//Si no sigue la encolo otra vez porque quedo inconsistente
+							//{screen_name:currentUser,since_id:maxId}
+							var search = {screen_name:data[index].screen_name
+														,since_id:data[index].since_id};
+							console.log("Recupera la busqueda ", search);
+							DBService.removeAliveSearch(data[index]._id)
+							.then(function(){
+								currentSearches.push(search);
+							});
+						}
+					})
+			}
+		});
+
+}
+
 function initializeRequests(){
 	setInterval(sendRequests, 12000);
+	setInterval(checkAliveTimelines, 19000);
+
 }
 
 /*
 Llama al nodo con el timeline y el limite que le diga
 */
 function callNode(requestNodo){
-	console.log("pide la request ",requestNodo);
+	console.log("Get ",requestNodo);
 	request(requestNodo, function(error, response, body) {
 		if(!error){
 			//No pude hacer que guarde aca porque para las busquedas grandes

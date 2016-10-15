@@ -116,3 +116,34 @@ exports.getAliveSearch = function (){
 		});
 	});
 }
+
+
+exports.getAliveSearch = function (type){
+	return new Promise(function(resolve, reject) {
+		var conn      = mongoose.createConnection('mongodb://localhost/bigdata');
+		var aliveSearchesSchema = new mongoose.Schema({
+			query				: String,
+			since				: Date,
+			until				: Date,
+			screen_name	: String,
+			since_id		: String,
+			request     : String,
+			protocolo   : String,
+			host				: String,
+			port				: String,
+			type        : String,
+			date        : Date
+		});
+		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
+		aliveSearch.findAsync({type:type},'')
+		.then(function(data){
+			resolve(data);
+		})
+		.catch(function(error){
+			resolve([]);
+		})
+		.finally(function(){
+			conn.close();
+		});
+	});
+}
