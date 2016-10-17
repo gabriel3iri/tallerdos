@@ -37,7 +37,7 @@ var express = require("express")
 			// hago el .then del promise del llamaTimeline
 			timelineController.llamaTimeLine(req.query.screen_name)
 				.then(function (result) {
-					console.log('interval ',result);
+					console.log(result);
 				});
 			res.send("Process running in background.");
 		}else{

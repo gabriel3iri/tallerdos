@@ -68,7 +68,6 @@ function createServer(){
 		if(nodeStatus.status == 1){
 			res.send(nodeStatus.msg);
 		} else {
-			console.log(req.query);
 			if(req.query.query !== undefined
 				&&req.query.since !== undefined
 				&&req.query.until !== undefined
@@ -81,7 +80,7 @@ function createServer(){
 								,since: req.query.since
 								,until: req.query.until
 				};
-				console.log("params",params);
+				console.log("Recibe la busqueda: ",params);
 				nodeStatus.currentId = _id;
 				twitterController
 					.llamaSearchTweet(params, nodeStatus,port,

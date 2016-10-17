@@ -113,13 +113,17 @@ function _llamaTimeLine (params,nodeStatus,cb){
 				seguir = false;
         }
 		}else{
-			//Se agotaron las peticiones para el token actual, pruebo con otro token
-			console.log('Error: ',error);
-			nextCredential = getNextCredential();
-      credentialNumber = nextCredential;
-			client = new Twitter(credentials[nextCredential]);
-      nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
-			console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
+			if(error[0].code==34){
+					seguir = false;
+			}else{
+				//Se agotaron las peticiones para el token actual, pruebo con otro token
+				console.log('Error: ',error);
+				nextCredential = getNextCredential();
+	      credentialNumber = nextCredential;
+				client = new Twitter(credentials[nextCredential]);
+	      nodeStatus.msg = 'Cambiando a las credenciales ' + nextCredential;
+				console.log('Conectando a Twitter con el juego de credenciales ' + nextCredential);
+		}
 		}
 		if(seguir){
 			_llamaTimeLine(params,nodeStatus,cb);

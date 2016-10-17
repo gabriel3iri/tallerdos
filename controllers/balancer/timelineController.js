@@ -18,7 +18,7 @@ exports.llamaTimeLine = function(screenNames) {
 					for(index in intervals){
 						currentSearches.push(intervals[index]);
 					}
-					resolve('Se encolo la busqueda ',intervals);
+					resolve('Se encola la peticion: '+intervals[index]);
 				})
     });
 }

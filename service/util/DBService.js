@@ -42,7 +42,7 @@ exports.registerAliveSearch = function(search){
 			date        : Date
 		});
 		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
-	  console.log("Registra busqueda Activa");
+	  console.log("Registra busqueda Activa: ",search);
 	  var ns = new aliveSearch(search);
 	  ns.save(function(err,data){
 			conn.close();
