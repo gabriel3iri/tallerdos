@@ -2,7 +2,7 @@ var request = require("request");
 var Promise = require('bluebird');
 var nodes ;
 // Busco los nodos conocidos
-var knownNodesFile = 'knownNodes.json';
+var knownNodesFile = 'config/nodes/knownNodes.json';
 var fs = require('fs');
 var known = JSON.parse(fs.readFileSync(knownNodesFile, 'utf8'));
 
