@@ -108,9 +108,6 @@ function _checkAliveSearches(data){
 				.then(function(){
 					currentSearches.push(search);
 					data.shift();
-					if(data.length>0){
-						_checkAliveSearches(data);
-					}
 				})
 				.catch(function(err){
 					console.log("Fallo el remove", err);
