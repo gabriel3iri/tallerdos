@@ -22,6 +22,8 @@ var credentialNumber
 	,connBig;
 
 exports.llamaTimeLine = function (params,nodeStatus,nameNodo,cb){
+	TwitterService.initialize(nameNodo);
+	initializeTwitter();
 	tuitDBSmall = connSmall.model('Tuit'+nameNodo, tuitSchema);
 	//Vacio la base temporal en cada vuelta
 	DBService.cleanData(tuitDBSmall,smallData);
@@ -29,6 +31,8 @@ exports.llamaTimeLine = function (params,nodeStatus,nameNodo,cb){
 }
 
 exports.llamaSearchTweet = function (params,nodeStatus,nameNodo,cb){
+	TwitterService.initialize(nameNodo);
+	initializeTwitter();
 	tuitDBSmall = connSmall.model('Tuit'+nameNodo, tuitSchema);
 	//Vacio la base temporal en cada vuelta
 	DBService.cleanData(tuitDBSmall,smallData);
@@ -113,6 +117,7 @@ function _llamaTimeLine (params,nodeStatus,cb){
 				seguir = false;
         }
 		}else{
+			//user inexistente
 			if(error[0].code==34){
 					seguir = false;
 			}else{
@@ -248,6 +253,8 @@ function exportToBigdata(cb) {
 			console.log("err",err);
 		});
 }
+
+
 function _exportToBigdata(allTuits,cb) {
 	var currentTuit =	allTuits.shift();
 	var tuitExport = new tuitDBBig(currentTuit);
@@ -279,5 +286,4 @@ function _exportToBigdata(allTuits,cb) {
 		});
 }
 
-initializeTwitter();
 initializeDB();

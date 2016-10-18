@@ -42,7 +42,6 @@ exports.registerAliveSearch = function(search){
 			date        : Date
 		});
 		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
-	  console.log("Registra busqueda Activa: ",search);
 	  var ns = new aliveSearch(search);
 	  ns.save(function(err,data){
 			conn.close();
@@ -51,6 +50,8 @@ exports.registerAliveSearch = function(search){
 				reject();
 	    }else{
 				//Retorno el id con el que se guardo para pasar al nodo final
+				console.log("Registra busqueda Activa: ",data._id);
+
 				resolve(data._id);
 			}
 	  });

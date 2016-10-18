@@ -1,6 +1,15 @@
 var Twitter = require('twitter');
 var Promise = require('bluebird');
+var credentials;
 
+exports.initialize = function(port){
+	var credentialsFile = 'config/credentials/'+port+'.json';
+	var fs = require('fs');
+	var file = JSON.parse(fs.readFileSync(credentialsFile, 'utf8'));
+	credentials = file.credentials;
+}
+
+/*
 var credentials = new Array(
 		{
 			consumer_key: '0koJJXFOFhm830HVXYvjLWO2S',
@@ -28,26 +37,14 @@ var credentials = new Array(
 			access_token_key: '762504943-8TOy7ogygWjIC5VpNonjWyEvuD6Apvdf8Y2S5Gmu',
 			access_token_secret: 'Vs0iz7PowN8wm5OesQFPN32uraKAjCtyNh20yTzL4gneU'}
 		);
+*/
 
-var credentialNumber = 0;
-client = new Twitter(credentials[credentialNumber]);
 
 //Promise.promisifyAll(client);
-
-// Paso a la siguiente credencial en el array de credenciales
-exports.getNextCredential = function(credentialNumber) {
-    if(credentialNumber < credentials.length){
-        credentialNumber = credentialNumber+1;
-        return credentialNumber;
-    }
-    return 0;
-}
 
 exports.getCredentials = function(){
 	return credentials;
 }
-
-
 /*
  * Método que busca el screen_name en users/show
  * Return: created_at del user,

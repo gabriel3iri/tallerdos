@@ -35,7 +35,7 @@ var express = require("express")
 	router.get('/timeline', function(req, res) {
 		if(req.query.screen_name !== undefined){
 			// hago el .then del promise del llamaTimeline
-			timelineController.llamaTimeLine(req.query.screen_name)
+			timelineController.llamaTimeLine(req.query.screen_name.toLowerCase())
 				.then(function (result) {
 					console.log(result);
 				});
@@ -47,9 +47,9 @@ var express = require("express")
 
 	router.get('/search', function(req, res) {
 		if(req.query.query !== undefined){
-			searchController.search(req.query.query)
+			searchController.search(req.query.query.toLowerCase())
 				.then(function (result) {
-					console.log('interval ',result);
+					console.log(result);
 				});
 			res.send("Process running in background.");
 		}else{
