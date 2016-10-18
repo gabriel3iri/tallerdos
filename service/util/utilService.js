@@ -16,12 +16,12 @@ exports.sigueVivo = function (nodo){
 				var status = jsonResponse.status;
 				var id = jsonResponse.currentId;
 				if(id != nodo._id){
-					resolve(false);
+					reject("Nodo con otro request");
 				}else{
 					resolve(true);
 				}
 			}else{
-				resolve(false);
+				reject("Nodo caido");
 			}
 		});
 	});

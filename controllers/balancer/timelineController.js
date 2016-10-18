@@ -94,8 +94,8 @@ function checkAliveTimelines(){
 function _checkAliveSearches(data){
 	//Por cada una chequeo si sigue con esa busqueda
 	UtilService.sigueVivo(data[0])
-		.then(function(sigue){
-			if(!sigue){
+		.catch(function(er){
+			console.log(er);
 				//Si no sigue la encolo otra vez porque quedo inconsistente
 				//{screen_name:currentUser,since_id:maxId}
 				var search = {screen_name:data[0].screen_name
@@ -108,12 +108,15 @@ function _checkAliveSearches(data){
 					if(data.length>0){
 						_checkAliveSearches(data);
 					}
-				});
-			}else{
-				data.shift();
-				if(data.length>0){
-					_checkAliveSearches(data);
-				}
+				})
+				.catch(function(err){
+					console.log("Fallo el remove", err);
+				});;
+		})
+		.finally(function(){
+			data.shift();
+			if(data.length>0){
+				_checkAliveSearches(data);
 			}
 		});
 }

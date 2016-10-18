@@ -94,11 +94,12 @@ function checkAliveSearches(){
 }
 
 function _checkAliveSearches(data){
+
 	//Por cada una chequeo si sigue con esa busqueda
 	UtilService.sigueVivo(data[0])
-		.then(function(sigue){
-			if(!sigue){
+		.catch(function(er){
 				//Si no sigue la encolo otra vez porque quedo inconsistente
+				console.log(er);
 				var search = {query:data[0].query
 											,since: UtilService.parseDate(data[0].since)
 											,until: UtilService.parseDate(data[0].until)};
@@ -110,12 +111,15 @@ function _checkAliveSearches(data){
 					if(data.length>0){
 						_checkAliveSearches(data);
 					}
+				})
+				.catch(function(err){
+					console.log("Fallo el remove", err);
 				});
-			}else{
-				data.shift();
-				if(data.length>0){
-					_checkAliveSearches(data);
-				}
+		})
+		.finally(function(){
+			data.shift();
+			if(data.length>0){
+				_checkAliveSearches(data);
 			}
 		});
 }
