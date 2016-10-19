@@ -88,38 +88,6 @@ exports.removeAliveSearch = function (_id){
 }
 
 
-exports.getAliveSearch = function (){
-	return new Promise(function(resolve, reject) {
-		var conn      = mongoose.createConnection('mongodb://localhost/bigdata');
-		var aliveSearchesSchema = new mongoose.Schema({
-			query				: String,
-			since				: Date,
-			until				: Date,
-			screen_name	: String,
-			since_id		: String,
-			request     : String,
-			protocolo   : String,
-			host				: String,
-			port				: String,
-			type        : String,
-			date        : Date
-		});
-		//Busco las consultas que estan marcadas como activas en la DB
-		var aliveSearch = conn.model('aliveSearches', aliveSearchesSchema);
-		aliveSearch.findAsync({type:"search"},'')
-		.then(function(data){
-			resolve(data);
-		})
-		.catch(function(error){
-			resolve([]);
-		})
-		.finally(function(){
-			conn.close();
-		});
-	});
-}
-
-
 exports.getAliveSearch = function (type){
 	return new Promise(function(resolve, reject) {
 		var conn      = mongoose.createConnection('mongodb://localhost/bigdata');
