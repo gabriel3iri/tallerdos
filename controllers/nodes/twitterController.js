@@ -94,8 +94,8 @@ function _llamaTimeLine (params,nodeStatus,cb){
 					//Defino el objeto, que coincide con el schema de mogoose
 					tweet = {
 						twid: tweets[t].id_str,
-						screen_name: tweets[t].user.screen_name,
-						text: tweets[t].text,
+						screen_name: tweets[t].user.screen_name.toLowerCase(),
+						text: tweets[t].text.toLowerCase(),
 						date: tweets[t].created_at
 					};
 					if(t == 1) {
@@ -159,8 +159,8 @@ function _llamaSearchTweet(params,nodeStatus,cb){
 					    maxId = MathService.stringDec(tweets.statuses[t].id_str) ;
 	            tweet = {
 	                twid: tweets.statuses[t].id_str,
-	                screen_name: tweets.statuses[t].user.screen_name,
-	                text: tweets.statuses[t].text,
+	                screen_name: tweets.statuses[t].user.screen_name.toLowerCase(),
+	                text: tweets.statuses[t].text.toLowerCase(),
 	                date: tweets.statuses[t].created_at
 	            };
 	            if(t == 1) {

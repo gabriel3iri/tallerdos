@@ -27,11 +27,11 @@ exports.lookForMaxResult = function(screenName) {
     tuitDBBig.findOne({screen_name:screenName}).sort('-date')
       .exec(
         function(err,data){
-          //conn.close();
-          if(data){
+          if(!err && data!=null){
             //pateo el maximo id para arriba
             resolve(data.twid);
           }else{
+            console.log("lookForMaxResult error", err);
             resolve(-1);
           }
         });
@@ -76,7 +76,7 @@ function lookForQuery(screenName) {
     searcheable.findOne({screen_name:screenName}).sort('-_id')
       .exec(
         function(err,data){
-          if(data){
+          if(!err && data!=null){
             resolve(data.max_id);
           }else{
             resolve('1')
