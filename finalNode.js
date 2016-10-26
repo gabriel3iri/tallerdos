@@ -11,10 +11,13 @@ var express = require("express")
 	,app = express()
   ,bodyParser  = require("body-parser")
   ,methodOverride = require("method-override")
-	,twitterController = require('./controllers/twitterController');
+	,twitterController = require('./controllers/nodes/twitterController');
+var TimelineService = require('./service/balancer/timelineService');
+var SearchService = require('./service/balancer/searchService');
+var DBService = require('./service/util/DBService');
 
 //Other variables
-var nodeStatus = {status: 0, msg: "Nodo libre"};
+var nodeStatus = {status: 0, msg: "Nodo libre", currentId:0};
 
 //**********Definicion de Funciones****************************
 
@@ -37,22 +40,27 @@ function createServer(){
 		if(nodeStatus.status == 1){
 			res.send(nodeStatus.msg);
 		} else {
-			//console.log(req.query);
-			if (
-				(req.query.screen_name !== undefined) &&
-				(req.query.since_id !== undefined)
-			) {
-				var params = {
-					screen_name: req.query.screen_name
-					,since_id: req.query.since_id
-					,count: 200
-				};
-				console.log("params",params);
-				twitterController.llamaTimeLine(params, nodeStatus, function () {});
-				res.send("El proceso está corriendo en background.");
-			} else {
-				res.send("Faltan parámetros. Debes especificar: screen_name, since_id, max_id");
-			}
+				if (
+					(req.query.screen_name !== undefined) &&
+					(req.query.since_id !== undefined)
+				) {
+					res.send("busqueda realizandose en background");
+					var _id = req.query._id;
+					var params = {
+						screen_name: req.query.screen_name
+						,since_id: req.query.since_id
+						,count: 200
+					};
+					console.log("params",params);
+					nodeStatus.currentId = _id;
+					twitterController
+						.llamaTimeLine(params,nodeStatus,port
+							 ,function(){
+								 twitterController.toFinishTimeline(nodeStatus,req.query.screen_name,_id);
+							 });
+				} else {
+					res.send("Faltan parámetros. Debes especificar: screen_name, since_id, max_id");
+				}
 		}
 	});
 
@@ -60,15 +68,30 @@ function createServer(){
 		if(nodeStatus.status == 1){
 			res.send(nodeStatus.msg);
 		} else {
-			console.log(req.query);
-			if(req.query.q !== undefined){
-					var since_id=  req.query.since_id!==undefined?req.query.since_id:null;
-					var max_id= req.query.max_id!==undefined?req.query.since_id:null;
-				var params = {q: req.query.q, count:100,
-								since_id: req.query.since_id,
-								max_id: req.query.max_id
+			if(req.query.query !== undefined
+				&&req.query.since !== undefined
+				&&req.query.until !== undefined
+				){
+				var _id = req.query._id;
+				var query =  req.query.query.replace(/-/g, ' ');
+				var params = {
+								q: query
+								,count:100
+								,since: req.query.since
+								,until: req.query.until
 				};
-				twitterController.llamaSearchTweet(params, nodeStatus);
+				console.log("Recibe la busqueda: ",params);
+				nodeStatus.currentId = _id;
+				twitterController
+					.llamaSearchTweet(params, nodeStatus,port,
+							function(){
+								twitterController
+									.toFinishSearch(nodeStatus
+								 							,req.query.query
+															,req.query.since
+															,req.query.until
+															,_id);
+							});
 			}else{
 				res.send("Faltan parámetros. Debes especificar: q");
 			}

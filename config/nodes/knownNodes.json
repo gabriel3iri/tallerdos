@@ -1,0 +1,45 @@
+{
+  "nodes":
+  [
+    {
+      "host": "localhost",
+      "port": "4000",
+      "protocol": "http"
+    },
+    {
+      "host": "localhost",
+      "port": "4001",
+      "protocol": "http"
+    },
+    {
+      "host": "localhost",
+      "port": "4002",
+      "protocol": "http"
+    },
+    {
+      "host": "localhost",
+      "port": "4003",
+      "protocol": "http"
+    },
+    {
+      "host": "localhost",
+      "port": "4004",
+      "protocol": "http"
+    },
+    {
+      "host": "localhost",
+      "port": "4005",
+      "protocol": "http"
+    },
+    {
+      "host": "localhost",
+      "port": "4006",
+      "protocol": "http"
+    },
+    {
+      "host": "localhost",
+      "port": "4007",
+      "protocol": "http"
+    }
+  ]
+}

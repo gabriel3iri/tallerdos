@@ -9,9 +9,11 @@ if(process.argv.length==3){
 //Required Section
 var express = require("express")
 	,app = express()
-    ,bodyParser  = require("body-parser")
-    ,methodOverride = require("method-override")
-	,balancerController = require('./controllers/balancerController');
+  ,bodyParser  = require("body-parser")
+  ,methodOverride = require("method-override")
+	,timelineController = require('./controllers/balancer/timelineController')
+	,searchController = require('./controllers/balancer/searchController');
+
 
 
 //**********Definicion de Funciones****************************
@@ -25,17 +27,29 @@ var express = require("express")
 	var router = express.Router();
 	router.get('/', function(req, res) {
 		res.send("<h1>Este es el Nodo Balanceador</h1>"+
-					"<ul><li>/timeline?screen_name -> para pedir el timeline de un usuario </li>"+
+					"<ul><li>/timeline?screen_name -> para pedir el timeline de un usuario. "+
+					" Ejemplo http://localhost:7777/timeline?screen_name=larocapuerca*castordecrema*BassTincho</li>"+
 					"<li>/search?query -> para buscar por palabra clave </li></ul>");
 	});
 
 	router.get('/timeline', function(req, res) {
-		//console.log(req.query);
 		if(req.query.screen_name !== undefined){
 			// hago el .then del promise del llamaTimeline
-			balancerController.llamaTimeLine(req.query.screen_name)
+			timelineController.llamaTimeLine(req.query.screen_name.toLowerCase())
 				.then(function (result) {
-					console.log('interval ',result);
+					console.log(result);
+				});
+			res.send("Process running in background.");
+		}else{
+			res.send("Not enough params.");
+		}
+	});
+
+	router.get('/search', function(req, res) {
+		if(req.query.query !== undefined){
+			searchController.search(req.query.query.toLowerCase())
+				.then(function (result) {
+					console.log(result);
 				});
 			res.send("Process running in background.");
 		}else{
@@ -49,5 +63,4 @@ var express = require("express")
 		console.log("Node server running on http://localhost:" + port);
 	});
 
-	//balancerController.checkNodes();
 })();
