@@ -1,0 +1,7 @@
+{
+  "structure":
+  [
+    {"retweet_count"  : "String"},
+    {"retweeted"      : "String"}
+  ]
+}

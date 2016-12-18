@@ -19,7 +19,8 @@ var credentialNumber
 	,tuitDBBig
 	,twee
 	,connSmall
-	,connBig;
+	,connBig
+	,fileStructure;
 
 exports.llamaTimeLine = function (params,nodeStatus,nameNodo,cb){
 	TwitterService.initialize(nameNodo);
@@ -95,9 +96,16 @@ function _llamaTimeLine (params,nodeStatus,cb){
 					tweet = {
 						twid: tweets[t].id_str,
 						screen_name: tweets[t].user.screen_name.toLowerCase(),
-						text: tweets[t].text.toLowerCase(),
+						text: tweets[t].text,
 						date: tweets[t].created_at
 					};
+
+					for(el in fileStructure){
+						for(attr in fileStructure[el]){
+							tweet[attr] =  tweets[t][attr];
+							}
+					}
+
 					if(t == 1) {
           	nodeStatus.msg = 'Procesando tuit ' + tweet.twid;
 						console.log('Analizando: ' + tweet.twid + ' ...');
@@ -160,9 +168,16 @@ function _llamaSearchTweet(params,nodeStatus,cb){
 	            tweet = {
 	                twid: tweets.statuses[t].id_str,
 	                screen_name: tweets.statuses[t].user.screen_name.toLowerCase(),
-	                text: tweets.statuses[t].text.toLowerCase(),
+	                text: tweets.statuses[t].text,
 	                date: tweets.statuses[t].created_at
 	            };
+							for(el in fileStructure){
+								for(attr in fileStructure[el]){
+									tweet[attr] =  tweets.statuses[t][attr];
+									}
+							}
+
+
 	            if(t == 1) {
 	                nodeStatus.msg = 'Procesando tuit ' + tweet.twid;
 	                console.log('Analizando: ' + tweet.twid + ' ...');
@@ -201,18 +216,29 @@ function _llamaSearchTweet(params,nodeStatus,cb){
 }
 
 function initializeDB(){
+	var structure = {
+			twid       : String,
+			screen_name : String,
+			text       : String,
+			date       : Date};
+	var tuitStructure = 'config/tweets/tweetStructure.json';
+	var fs = require('fs');
+	var file = JSON.parse(fs.readFileSync(tuitStructure, 'utf8'));
+	fileStructure = file.structure;
+	for(el in fileStructure){
+		for(attr in fileStructure[el]){
+			console.log(attr," ",fileStructure[el][attr]);
+			structure[attr] = fileStructure[el][attr];
+	    }
+	}
+
 	// MongoDB connection a big data
 	bigData = 'bigdata';
 	// MongoDB connection a base de datos local
 	smallData = 'twitter';
 	connBig      = mongoose.createConnection('mongodb://localhost/'+bigData);
 	connSmall     = mongoose.createConnection('mongodb://localhost/'+smallData);
-	tuitSchema = new mongoose.Schema({
-		twid       : String,
-		screen_name : String,
-		text       : String,
-		date       : Date
-	});
+	tuitSchema = new mongoose.Schema(structure);
 	//tuitDBSmall = connSmall.model('Tuit', tuitSchema);
 	tuitDBBig = connBig.model('Tuit', tuitSchema);
 }
